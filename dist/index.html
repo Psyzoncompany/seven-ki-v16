@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="/style.css?v=16" />
   <link rel="stylesheet" href="/versus.css?v=18" />
   <link rel="stylesheet" href="/arrival.css?v=23" />
+  <link rel="stylesheet" href="/bright-ui.css?v=25" />
   <script type="module" src="/game.js?v=16"></script>
 </head>
 <body data-screen="intro">
@@ -72,7 +73,7 @@
         </section>
         <section id="world-map" class="world-map overlay" aria-label="Mapa de fases" hidden>
  <header class="map-header"><div><span class="map-eyebrow">LENDAS DAS 7 ESFERAS</span><h2 id="map-heading">SAGA SAIYAJIN</h2></div><div class="map-tools"><button id="map-skills" class="map-back">HABILIDADES</button><button id="map-saga" class="map-back">SAGA FREEZA</button><button id="map-mode" class="map-back">TREINO ORIGINAL</button><button id="map-back" class="map-back">VOLTAR AO MENU</button></div></header>
- <div class="map-body"><div class="map-landscape"><div class="map-route" aria-hidden="true"></div><div id="map-nodes" class="map-nodes" role="group" aria-label="Regiões da jornada"></div></div>
+ <div class="map-body"><div class="map-landscape"><div class="map-route" aria-hidden="true"></div><section id="saga-scene" hidden><div class="saga-scene-copy"><small>LOCAL DA BATALHA</small><h3 id="map-location"></h3><small>ADVERSÁRIO DA HISTÓRIA</small><strong id="map-opponent"></strong><ol id="map-itinerary" aria-label="Percurso do capítulo"></ol></div><canvas id="map-opponent-art" width="280" height="280" aria-hidden="true"></canvas></section><div id="map-nodes" class="map-nodes" role="group" aria-label="Regiões da jornada"></div></div>
  <aside class="map-detail" aria-labelledby="map-title"><span id="map-number" class="map-eyebrow">FASE 01</span><h3 id="map-title">Vale dos Ecos</h3><div id="map-preview" class="map-preview" aria-hidden="true"></div><p id="map-description"></p><div class="map-objective"><span data-icon="orb"></span><div><small>OBJETIVO</small><strong id="map-goal">7 esferas + chefe</strong></div></div><div class="map-enemies"><small>INIMIGOS</small><span id="map-enemies"></span></div><p id="map-stage-status" role="status"></p><button id="map-play" class="primary-button"><span data-icon="right"></span><span id="map-play-label">INICIAR FASE</span></button></aside></div>
  <footer class="map-footer"><div><small>ESFERAS</small><strong id="map-orbs">0 / 7</strong></div><div><small>FASES CONCLUÍDAS</small><strong id="map-completed">0 / 7</strong></div><div><small>MELHOR COMBO</small><strong id="map-best-combo">—</strong></div><span id="map-save-note">Progresso salvo neste dispositivo.</span></footer>
  </section>
@@ -98,6 +99,7 @@
           </div>
         </section>
       </div>
+      <div id="gameplay-notes" aria-label="Instruções abaixo da área de jogo"></div>
       <div id="touch-controls" hidden class="touch-controls" aria-label="Controles de toque">
         <button id="touch-powers" class="touch-toolbar" aria-expanded="false">+ PODERES</button>
 

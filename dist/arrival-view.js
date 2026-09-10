@@ -20,12 +20,11 @@ export function drawArrivalWorld(c,g,cam,atlases,sprite,reduced){
  if(g.arrival.step<2||g.arrival.farmerTime>0){
   const rescued=g.arrival.step>=2,x=1790-cam;
   draw(2,1790,462,86);
-  c.save();c.fillStyle='#102d3ef2';c.strokeStyle='#eac589';c.lineWidth=1;
-  c.beginPath();c.roundRect(x-122,298,244,49,9);c.fill();c.stroke();
-  c.beginPath();c.moveTo(x-6,347);c.lineTo(x,354);c.lineTo(x+6,347);c.fill();
-  c.textAlign='center';c.fillStyle='#ffe1a3';c.font='bold 12px Arial';
-  c.fillText(rescued?'Obrigado! Meu caminho está livre!':'Quebre as pedras do meu caminho!',x,317);
-  c.fillStyle='#c5dcd5';c.font='11px Arial';c.fillText(rescued?'A cápsula caiu logo adiante.':`${g.rocks.filter(r=>r.broken).length}/2 pedras · Golpes ou rajadas de KI`,x,334);c.restore();
+  c.save();c.fillStyle='#f2f9fff2';c.strokeStyle='#d99522';c.lineWidth=1;
+  c.beginPath();c.roundRect(x-122,478,244,49,9);c.fill();c.stroke();
+  c.textAlign='center';c.fillStyle='#214d70';c.font='bold 12px Arial';
+  c.fillText(rescued?'Obrigado! Meu caminho está livre!':'Quebre as pedras do meu caminho!',x,497);
+  c.fillStyle='#355c7b';c.font='11px Arial';c.fillText(rescued?'A cápsula caiu logo adiante.':`${g.rocks.filter(r=>r.broken).length}/2 pedras · Golpes ou rajadas de KI`,x,514);c.restore();
  }
  const d=g.dialogue,scene=d?.key==='abduction',t=g.arrival.sceneTime;
  if(!scene&&g.arrival.step<3)draw(3,350,462,60);
@@ -49,13 +48,13 @@ export function drawArrivalWorld(c,g,cam,atlases,sprite,reduced){
 }
 export function drawArrivalMinimap(c,g){
  const width=c.canvas.width,height=c.canvas.height;c.clearRect(0,0,width,height);
- c.fillStyle='#102a3c';c.fillRect(0,0,width,height);const px=x=>10+x/ARRIVAL.width*(width-20),py=y=>17+y/462*(height-28);
+ c.fillStyle='#deeff4';c.fillRect(0,0,width,height);const px=x=>10+x/ARRIVAL.width*(width-20),py=y=>17+y/462*(height-28);
  c.strokeStyle='#5a827b';c.lineWidth=2;c.beginPath();c.moveTo(10,py(462));c.lineTo(width-10,py(462));c.stroke();
  for(const p of g.platforms){c.strokeStyle='#769183';c.beginPath();c.moveTo(px(p.x),py(p.y));c.lineTo(px(p.x+p.w),py(p.y));c.stroke();}
  for(const h of g.hazards){c.fillStyle='#da9676';c.fillRect(px(h.x),py(462)-4,Math.max(3,h.w/ARRIVAL.width*(width-20)),4);}
  for(const e of g.enemies)if(e.hp>0&&Math.abs(e.x-g.p.x)<700){c.fillStyle='#ed9682';c.beginPath();c.arc(px(e.x),py(e.y),2.5,0,Math.PI*2);c.fill();}
- const target=arrivalTarget(g);c.fillStyle='#f7d599';c.fillRect(px(target.x)-3,py(target.y)-3,6,6);
- c.fillStyle='#b4f0de';c.beginPath();c.arc(px(g.p.x),py(g.p.y),3.5,0,Math.PI*2);c.fill();
+ const target=arrivalTarget(g);c.fillStyle='#ac6800';c.fillRect(px(target.x)-3,py(target.y)-3,6,6);
+ c.fillStyle='#007652';c.beginPath();c.arc(px(g.p.x),py(g.p.y),3.5,0,Math.PI*2);c.fill();
 }
 export function updateArrivalHud(g,root,usingController){
  const m=g.arrival,panel=root.getElementById('arrival-hud');panel.hidden=!m||!['playing','paused'].includes(g.mode);

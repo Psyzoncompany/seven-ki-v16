@@ -1,4 +1,6 @@
 import {ARRIVAL,ARRIVAL_ID,readArrival,saveArrival} from './arrival-mission.js';
+import {drawWorldGuidance,worldGuidance} from './world-guidance.js';
+import {renderSagaScene} from './saga-map-view.js';
 import {drawArrivalBackground,drawArrivalTerrain,drawArrivalWorld,updateArrivalHud} from './arrival-view.js';
 import {KEY_MAP,KeyboardInput} from './keyboard.js';
 import {comboPose} from './combo-poses.js';
@@ -15,9 +17,11 @@ import {XboxInput} from './gamepad.js?v=15';
 import {STAGES,readProgress,recordVictory,stageRecord,isUnlocked} from './campaign.js?v=8';
 import {hydrateIcons} from './icons.js?v=8';
 hydrateIcons();
+const notes=document.getElementById('gameplay-notes');
+notes.append(document.querySelector('.arrival-objective'),document.getElementById('arrival-radio'),document.getElementById('timing-cue'),document.getElementById('direction'));
 // The play surface owns touch gestures; do not let Safari interpret them as zoom.
 for(const type of ['gesturestart','gesturechange','gestureend','dblclick'])document.addEventListener(type,e=>{if(e.target.closest('#app'))e.preventDefault();},{passive:false});
-document.addEventListener('touchmove',e=>{if(!e.target.closest('.controls-card,.layout-card,.skills-card,.versus-select'))e.preventDefault();},{passive:false});
+document.addEventListener('touchmove',e=>{if(!e.target.closest('.controls-card,.layout-card,.skills-card,.versus-select,.world-map'))e.preventDefault();},{passive:false});
 
 import {WORLD, clamp} from './engine.js?v=16';
 import {VersusEngine as GameEngine,VERSUS_FIGHTERS,versusFighter,versusPose} from './versus.js?v=18';
@@ -274,6 +278,7 @@ function hudUpdate(){
   $('special-name').textContent=engine.versus?'ESPECIAL':engine.story?'KAME':p.form?'EXPLOSÃO':'ESPECIAL';
   if(engine.activeEncounter)$('objective').textContent=`ARENA · ${engine.enemies.filter(e=>engine.activeEncounter.ids.includes(e.id)&&e.hp>0).length} INIMIGOS`;
   if(engine.activeEncounter)$('direction').textContent='LIMPE A ARENA';
+  const guidance=worldGuidance(engine);$('direction').textContent=guidance?(guidance.x<p.x?'← ':'→ ')+guidance.label:'';
 }
 
 function burst(x,y,n,color,power=170,gravity=300){
@@ -498,8 +503,8 @@ function renderEnemyBody(e){
 
   const x=e.x-cam;if(x< -140||x>W+140||e.hp<=0&&e.dead<=0)return;
   const extra=comboPose(e,engine.versus?engine.versus.opponent.id:e.storyBoss);
-  if(extra!==null){const atlas=atlases.comboRoster,f=atlas.frames[extra];shadow(x,e.grounded?e.y:WORLD.ground,e.w*.55,.25);sprite(atlas.image,f.rect,x,e.y,e.dir,f.scale,{anchor:f.anchor,reaction:e,hurt:e.flash>.04});drawBossStyle(e,x);if(engine.versus)drawVersusTag(x,e.y-engine.versus.opponent.height-12,'CPU','#ffabb4');return;}
-  if(engine.versus){const atlas=fighterAtlas(engine.versus.opponent),f=atlas.frames[versusPose(engine.versus.opponent,e)];shadow(x,e.grounded?e.y:WORLD.ground,e.w*.55,.25);sprite(atlas.image,f.rect,x,e.y,e.dir,f.scale??atlas.scale,{anchor:f.anchor,reaction:e,hurt:e.flash>.04});drawBossStyle(e,x);drawVersusTag(x,e.y-engine.versus.opponent.height-12,'CPU','#ffabb4');return;}
+  if(extra!==null){const atlas=atlases.comboRoster,f=atlas.frames[extra];shadow(x,e.grounded?e.y:WORLD.ground,e.w*.55,.25);sprite(atlas.image,f.rect,x,e.y,e.dir,f.scale,{anchor:f.anchor,reaction:e,hurt:e.flash>.04});drawBossStyle(e,x);if(engine.versus)drawVersusTag(x,e.y+22,'CPU','#ffabb4');return;}
+  if(engine.versus){const atlas=fighterAtlas(engine.versus.opponent),f=atlas.frames[versusPose(engine.versus.opponent,e)];shadow(x,e.grounded?e.y:WORLD.ground,e.w*.55,.25);sprite(atlas.image,f.rect,x,e.y,e.dir,f.scale??atlas.scale,{anchor:f.anchor,reaction:e,hurt:e.flash>.04});drawBossStyle(e,x);drawVersusTag(x,e.y+22,'CPU','#ffabb4');return;}
   const boss=e.type===2,scale=boss?.5:.37,moving=['walk','run','flight'].includes(e.state);let frame=e.hp<=0?5:e.stun>0?4:['windup','feint'].includes(e.state)?2:e.state==='attack'?3:moving?Math.floor(e.moveCycle*(e.state==='run'?10:6))%2:0;
   const y=e.y+(e.grounded&&moving?-Math.abs(Math.sin(e.moveCycle*12))*2:0)+(e.type===1?Math.sin(engine.visualTime*3+e.id)*3:0),breathe=e.state==='idle'?Math.sin(e.moveCycle*3)*.008:0;
   shadow(x,e.y,e.w*.75,.29);
@@ -554,7 +559,7 @@ function renderPlayer(){
   const land=landingPulse*.04,motion=pose.motion;ctx.save();ctx.translate(x-p.dir*anticipation*3,p.y);ctx.transform(1,0,-(motion?.lean??lean),1,0,0);ctx.scale(1+squash+land,(1-squash-land)*(motion?.breath||1));sprite(atlas.image,f.rect,0,bob+(motion?.lift||0)+(atlas.offsetY||0)*atlas.scale,p.dir,f.scale??atlas.scale,{alpha,anchor:f.anchor,reaction:p});ctx.restore();
   if(p.flying){ctx.save();ctx.globalAlpha=.35;ctx.strokeStyle=p.form?'#ff8b78':'#8ff4ed';ctx.lineWidth=2;for(let i=-2;i<=2;i++){ctx.beginPath();ctx.moveTo(x-p.dir*18,p.y-42+i*10);ctx.lineTo(x-p.dir*(55+Math.abs(p.vx)*.08),p.y-42+i*10);ctx.stroke();}ctx.restore();}
   if(p.state==='special'&&p.stateTime<.28){ctx.save();ctx.shadowColor=p.form?'#ffd777':'#a9fff0';ctx.shadowBlur=20;ctx.fillStyle='#effff6';ctx.beginPath();ctx.arc(x+p.dir*43,p.y-48,5+p.stateTime*34,0,Math.PI*2);ctx.fill();ctx.restore();}
-  if(engine.versus)drawVersusTag(x,p.y-engine.versus.player.height-12,'VOCÊ','#a4e6ff');
+  if(engine.versus)drawVersusTag(x,p.y+22,'VOCÊ','#a4e6ff');
 }
 function renderShots(){
   for(const s of engine.shots){
@@ -574,7 +579,7 @@ function renderEffects(){
       else drawWorldEffect(worldSprite,e,x,y,reduced);
       ctx.restore();continue;
     }
-    if(e.type==='feedback'){ctx.globalAlpha=Math.min(1,e.life*4);ctx.font='bold 13px Arial';ctx.textAlign='center';ctx.lineWidth=4;ctx.strokeStyle='#071322';ctx.strokeText(e.text,x,y-t*15);ctx.fillStyle=e.color;ctx.fillText(e.text,x,y-t*15);ctx.restore();continue;}
+    if(e.type==='feedback'){ctx.globalAlpha=Math.min(1,e.life*4);ctx.font='bold 13px Arial';ctx.textAlign='center';ctx.lineWidth=4;ctx.strokeStyle='#071322';ctx.strokeText(e.text,engine.p.x-cam,engine.p.y+43);ctx.fillStyle=e.color;ctx.fillText(e.text,engine.p.x-cam,engine.p.y+43);ctx.restore();continue;}
     if(e.type==='comboArc'){
       ctx.translate(x,y);ctx.scale(e.dir,1);ctx.globalAlpha=(1-t)*.7;
       ctx.strokeStyle=engine.p.form?'#ff8778':'#c9f4ff';ctx.lineCap='round';ctx.lineWidth=3*(1-t)+1;
@@ -640,7 +645,7 @@ function render(dt){
     const previewX=W*.71;shadow(previewX,WORLD.ground,30);const a=atlases.goku,f=a.frames[Math.floor(engine.visualTime*2)%2];sprite(a.image,f.rect,previewX,WORLD.ground,1,a.scale*1.15,{anchor:f.anchor});
     if(W>680){shadow(W*.9,WORLD.ground,28);const a=atlases.sagaEnemies,f=a.frames[0];sprite(a.image,f.rect,W*.9,WORLD.ground,-1,115/f.rect[3],{anchor:f.anchor});}
   }else{
-    for(const e of engine.enemies)renderEnemy(e);renderPlayer();renderShots();renderEffects();renderCombatDebug();
+    for(const e of engine.enemies)renderEnemy(e);renderPlayer();renderShots();renderEffects();drawWorldGuidance(ctx,engine,cam,W,reduced);renderCombatDebug();
   }
   ctx.restore();W=screenW;H=screenH;renderTop=0;
   renderCutin();
@@ -684,6 +689,7 @@ function renderMap(){
   }
   const level=getStage(selectedStage),record=recordFor(selectedStage),ready=unlocked(selectedStage);$('map-number').textContent=level.biome;$('map-title').textContent=level.name;$('map-description').textContent=level.detail;$('map-enemies').textContent=level.enemy;$('map-goal').textContent=level.mission?'4 objetivos / investigação e resgate':level.available?'7 esferas + '+(level.bossName||'chefe'):'PRÓXIMA SAGA';
   $('map-preview').style.backgroundImage=level.mission?"url('/assets/arrival-coast-v23.png')":level.saga==='freeza'?"url('/assets/namek-stage-v13.png')":level.id===2?"url('/assets/forest-v6.png')":level.chapter||level.id===1?"url('/assets/valley.png')":"url('/assets/world-map-v5.png')";$('map-preview').style.backgroundSize=level.chapter||level.id<=2?'cover':'280%';
+  renderSagaScene(document,level,atlases);
   $('map-play').disabled=!level.available||!ready;$('map-play-label').textContent=!level.available?'EM DESENVOLVIMENTO':!ready?'CONCLUA O CAPÍTULO ANTERIOR':record.completed?'JOGAR NOVAMENTE':level.mission?(readArrival().checkpoint?'RETOMAR CHECKPOINT':'INICIAR FASE 1.1'):'INICIAR '+(level.chapter?'CAPÍTULO':'FASE');
   $('map-stage-status').textContent=!level.available?'Disponível em uma atualização futura.':!ready?'Conclua a etapa anterior para desbloquear.':record.completed?'Recorde: '+formatTime(record.bestTime)+' · combo '+record.bestCombo:'Pronto para jogar.';
   const records=campaignMode==='story'?levels.map(l=>recordFor(l.id)):Object.values(campaign.stages),completed=records.filter(r=>r.completed).length;$('map-orbs').textContent=records.reduce((n,r)=>n+r.orbs,0)+' / '+levels.filter(l=>!l.mission).length*7;$('map-completed').textContent=completed+' / '+total;$('map-best-combo').textContent=Math.max(0,...records.map(r=>r.bestCombo));$('map-save-note').textContent=progressSaved?'Progresso salvo neste dispositivo.':'Progresso disponível apenas nesta sessão.';

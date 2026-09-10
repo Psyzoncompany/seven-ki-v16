@@ -1,0 +1,73 @@
+/* Bright tournament palette: blue frames, warm paper and orange selection. */
+:root{color-scheme:light;--ink:#173c66;--paper:#f4faff;--gold:#ffc437}
+body{background:#dceefa;color:var(--ink)}
+.app-header,.page-footer{color:#315371;background:#edf7fd}
+.wordmark,.tools button,.header-center,.page-footer span{color:#214b73}
+.game-shell{background:#e4f2fa;border-color:#7ea7c5}
+.vignette{opacity:.16}
+.intro{background:linear-gradient(90deg,#eff8fff2,#e0f2ff99 47%,transparent 80%)}
+.intro h1,.intro h1 strong,.intro-content,.intro-subtitle,.intro-description{color:#153f72;text-shadow:none}
+.overline,.intro-meta{color:#476886}
+.primary-button{color:#173c66;background:linear-gradient(#ffdf65,#ffb42c);border:2px solid #fff4bf;border-radius:5px;box-shadow:0 3px 0 #b56e17;font-weight:900}
+.secondary-button,.map-back,.menu-option,.text-button{color:#214a71;background:#f2f9ff;border-color:#8eafc9}
+.primary-button:hover,.map-back:hover,.secondary-button:hover{filter:brightness(1.05);color:#153a64;background:#ffda6a}
+button:focus-visible{outline:3px solid #0069bd;outline-offset:3px}
+.menu.overlay,.skills-modal{background:#dceef3e8}
+.menu-card,.controls-card,.skills-card,.layout-card,.versus-select{background:linear-gradient(135deg,#f8fcff,#cbe5f5);color:#173c66;border-color:#72a0c5}
+.menu h2,.controls-card h2,.skills-card h2,.menu-card p,.controls-card p,.skills-summary,.skill-detail p,.skill-detail small,.form-picker{color:#214a71}
+.skill-node,.skill-detail,.form-picker button{background:#edf7ff;color:#163b65;border-color:#7ca8c7}
+.skill-node small,.skill-detail h3,.skills-card .overline,#skill-feedback{color:#356184}
+.skill-node.learned{background:#d2f3d8;color:#174e33}.skill-node.learned small{color:#216140}
+.hud .player-hud,body.minimal-combat .player-hud{background:linear-gradient(120deg,#f6fbfff2,#a8d6f2ed);border:2px solid #f5fbff;border-bottom:4px solid #2474b2;border-radius:8px 20px 8px 8px;box-shadow:0 3px 10px #15395935;color:#123f6c}
+.hud-name,.hud-name b{color:#174574;text-shadow:none;font-style:italic;font-weight:900}
+.portrait,body.minimal-combat .portrait{background:#ffcb47;border:2px solid #fff3b4;border-radius:50%;overflow:hidden}
+.health-track,.ki-track,.boss-track{background:#376083;border:1px solid #fff9}
+#health-fill{background:linear-gradient(#d6ff65,#5bbd3b)}#ki-fill{background:linear-gradient(#fff4ad,#ffc437)}
+.boss-hud,body.minimal-combat .boss-hud{background:#e9f5fff0;border:2px solid white;border-bottom:3px solid #c95143;color:#173f6d;border-radius:12px 4px}
+.boss-track i{background:linear-gradient(90deg,#f17d3d,#ffca55)}
+.orb-hud,body.minimal-combat .orb-hud{background:#f5fbffed;color:#174574;border:1px solid #91b6d1}
+.pause-button{background:#f3faff;color:#235079;border:1px solid #80abc9}
+.dialogue-panel,body.minimal-combat .dialogue-panel{background:#f2f9fff5;color:#204b70;border:2px solid #eca92e;box-shadow:0 4px 18px #234c6a33}
+.dialogue-copy h2{color:#9a5110}.dialogue-top,.dialogue-actions .text-button{color:#375d7e}
+/* Reserve a separate strip beneath the canvas: instructions never cover fighters. */
+#gameplay-notes{display:none;flex:none;background:#f1f8ff;color:#193f68;border-top:3px solid #f4b72e;padding:8px 16px;gap:5px 20px;min-width:0;z-index:15}
+body[data-screen=playing] #gameplay-notes{display:flex;flex-wrap:wrap;align-items:center}
+body[data-screen=playing] #stage,body.immersive[data-screen=playing] #stage{height:auto;flex:1;min-height:0}
+#gameplay-notes .arrival-objective,#gameplay-notes #arrival-radio,#gameplay-notes .timing-cue,#gameplay-notes .world-direction{position:static;inset:auto;transform:none;width:auto;max-width:100%;margin:0;padding:0;background:none;border:0;box-shadow:none;color:#20496e;white-space:normal;text-align:left;font-family:Arial,sans-serif;line-height:1.35}
+#gameplay-notes .arrival-objective{display:none;flex:1 1 300px}
+body.arrival-mode #gameplay-notes .arrival-objective{display:block}
+#gameplay-notes .arrival-objective small{color:#80500c;font-size:10px;letter-spacing:1px}
+#gameplay-notes .arrival-objective h2{display:inline;margin:0 0 0 10px;font-size:15px;color:#163d68}
+#gameplay-notes .arrival-objective p{font-size:12px;color:#365b79;margin:3px 0}
+#gameplay-notes .arrival-objective>span{font-size:10px;color:#2b6b51}
+#gameplay-notes #arrival-radio{flex:1 1 280px;font-size:12px;padding-left:12px;border-left:2px solid #80b4d6}
+body:not(.arrival-mode) #arrival-radio{display:none}
+body.minimal-combat[data-screen=playing] #gameplay-notes .timing-cue:not(:empty){background:none;color:#285676;padding:0;font-size:12px}
+body:not(.arrival-mode)[data-screen=playing] #gameplay-notes .world-direction:not(:empty){display:block!important;font-size:12px;font-weight:700}
+.arrival-radar{background:#eff9fff0;border-color:#a3c4d9;top:94px;width:148px;padding:7px}
+.arrival-radar header,.arrival-radar small{color:#285272}
+/* Each saga has its own atlas; the selected chapter shows its location and rival. */
+.world-map{background:linear-gradient(#edf8fff0,#d8efffd9),url('/assets/world-map-v5.png') center/cover;color:#173d64;overflow:auto}
+.world-map.freeza-map{background:linear-gradient(#edfff3eb,#c9f0f0d9),url('/assets/namek-map-v13.png') center/cover}
+.map-header h2{color:#18528b;font-style:italic;font-weight:900}.map-eyebrow,.freeza-map .map-eyebrow{color:#476b86}
+.map-back,#map-saga{color:#1c517a;background:#f2faff;border:1px solid #85b0ce}
+.map-body{min-height:0}.map-landscape,.freeza-map .map-landscape{background:url('/assets/world-map-v5.png') center/cover;border:2px solid #eef9ff;box-shadow:none;display:flex;flex-direction:column;min-height:310px}
+.freeza-map .map-landscape{background-image:url('/assets/namek-map-v13.png')}
+#saga-scene{position:relative;display:flex;flex:1;min-height:220px;background-size:cover,cover;overflow:hidden;padding:18px;color:#17456c}
+#saga-scene[hidden]{display:none}.saga-scene-copy{position:relative;z-index:1;width:65%;text-shadow:0 1px #ffffffa0}
+.saga-scene-copy small{font-size:10px;letter-spacing:1.5px;font-weight:700}.saga-scene-copy h3{font-size:clamp(18px,2.1vw,28px);margin:6px 0 16px;line-height:1.05}.saga-scene-copy strong{display:block;font-size:20px;color:#8b4112;margin:4px 0}
+#map-opponent-art{position:absolute;right:0;bottom:0;width:42%;height:100%;object-fit:contain;object-position:bottom;image-rendering:pixelated;filter:drop-shadow(3px 5px 0 #143a5444)}
+#map-itinerary{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:5px;font-size:10px;font-weight:700}
+#map-itinerary li{display:flex;gap:7px;align-items:center}#map-itinerary li:before{content:attr(data-stop);display:grid;place-items:center;flex:none;width:18px;height:18px;border-radius:50%;background:#246da5;color:white;border:1px solid white}
+.story-map .map-nodes,.story-map.freeza-map .map-nodes{position:relative;inset:auto;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));padding:10px;gap:8px;background:#e5f4ffe8;flex:none;align-content:end}
+.story-map .map-node,.freeza-map .map-node{width:100%;background:#eff8ff;color:#214b70;border:1px solid #88aec8;box-shadow:0 2px 0 #5080a433;border-radius:4px}
+.story-map .map-node.selected,.freeza-map .map-node.selected{background:linear-gradient(#ffe78b,#ffbd3b);border:2px solid #fff6be;box-shadow:0 0 0 2px #d88b22;color:#163c65}
+.story-map .map-node:hover{background:#d6edff}.story-map .map-node canvas.node-art{height:65px;margin-bottom:4px}
+.map-node small,.map-node strong,.node-status{color:#20496c}.map-node small,.node-status{font-size:10px}.map-node strong{font-size:12px}.map-node.completed .node-status{color:#196639}
+.map-node.locked{opacity:.8}.story-map .map-node.locked canvas{filter:grayscale(.5)}
+.map-detail,.freeza-map .map-detail{background:#f3faff;color:#244e72;border:1px solid #88b5d1;box-shadow:none}
+.map-detail h3,.map-objective strong{color:#184d7e}.map-detail small,.freeza-map .map-detail small,.map-footer small,.freeza-map .map-footer small{color:#49718d}
+.map-detail p,.map-enemies span,.map-footer{color:#335e7d}.map-detail .map-preview{min-height:74px}.map-detail .primary-button{color:#153f6d}.map-footer strong{color:#184e7a}
+@media(max-width:760px){#gameplay-notes{padding:6px 10px;gap:4px}.arrival-radar{width:105px;top:78px;right:10px}#gameplay-notes .arrival-objective h2{font-size:13px}#gameplay-notes #arrival-radio{font-size:11px;flex-basis:100%}.map-body{display:flex;flex-direction:column}.map-landscape{flex:none;min-height:300px}.map-detail{flex:none}.saga-scene-copy h3{font-size:20px}.map-detail #map-description{display:block;font-size:12px}.map-detail .map-enemies{display:block}.story-map .map-node canvas.node-art{height:48px}.map-header{flex:none}.map-footer{flex:none}}
+@media(max-width:480px){.story-map .map-nodes,.story-map.freeza-map .map-nodes{grid-template-columns:repeat(2,minmax(0,1fr))}.story-map .map-node{display:grid;grid-template-columns:40px 1fr;text-align:left;gap:2px 5px;padding:6px}.story-map .map-node canvas.node-art{grid-row:1/4;width:40px;height:50px;margin:0}.map-header h2{font-size:17px}.saga-scene-copy{width:72%}#saga-scene{padding:12px}.map-detail .map-preview{display:none}}
+@media(orientation:landscape) and (max-height:600px){#gameplay-notes{padding:4px 12px}#gameplay-notes .arrival-objective p{margin:1px 0;font-size:11px}#gameplay-notes .arrival-objective>span{display:none}#gameplay-notes #arrival-radio{flex:1 1 250px;font-size:11px}.map-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(210px,30%)}.map-landscape{min-height:285px}#saga-scene{min-height:190px;padding:10px}.saga-scene-copy h3{font-size:19px;margin-bottom:8px}#map-itinerary{gap:3px;margin-top:6px}.map-detail{display:block}.map-detail #map-description{display:block;font-size:12px}.story-map .map-node canvas.node-art{height:38px}.map-footer{display:none}}

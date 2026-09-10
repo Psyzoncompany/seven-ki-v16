@@ -218,13 +218,24 @@ export class GameEngine {
       }
 	      if(a.t>=m.duration||p.queued&&a.connected&&canCancel(a,p.queued.kind==='normal'?(p.grounded?'light':'air'): 'air')){const queued=p.queued;p.attack=null;p.queued=null;p.state='idle';p.recovery=queued?0:.045;if(queued)this.beginAttack(queued.kind,queued.perfect);}
     }
-    const prevY=p.y;
+    const prevY=p.y,prevX=p.x;
 	    if(!['special','genki','charge'].includes(p.state)&&!p.dragonRush)p.vy+=WORLD.gravity*dt*(p.flying&&!p.diving&&p.stun<=0?(input.flightMode?0:.06):p.airFloat>0&&!p.diving&&p.stun<=0?.3:1);
     const ceiling=this.saiyanCombat?174:82;
     p.x=clamp(p.x+p.vx*dt,this.saiyanCombat?96:40,WORLD.width-(this.saiyanCombat?96:90));if(this.activeEncounter)p.x=clamp(p.x,this.activeEncounter.left+22,this.activeEncounter.right-22);p.y=Math.max(ceiling,p.y+p.vy*dt);if(p.y===ceiling&&p.vy<0)p.vy=0;
     p.wasGrounded=p.grounded;p.grounded=false;
+    // Sweep the horizontal movement so dashes cannot tunnel through rubble.
+    if(this.arrival)for(const r of this.rocks){
+      if(r.broken)continue;
+      const half=p.w*.4,left=r.x-r.w,right=r.x+r.w,top=r.y-r.h;
+      if(prevY>top+1&&prevY-p.h<r.y){
+        if(prevX+half<=left&&p.x+half>left){p.x=left-half;p.vx=0;}
+        else if(prevX-half>=right&&p.x-half<right){p.x=right+half;p.vx=0;}
+        else if(p.x+half>left&&p.x-half<right){p.x=prevX<r.x?left-half:right+half;p.vx=0;}
+      }
+    }
     if(p.vy>=0){
       let landing=WORLD.ground;
+      if(this.arrival)for(const r of this.rocks)if(!r.broken&&p.x+p.w*.4>r.x-r.w&&p.x-p.w*.4<r.x+r.w&&prevY<=r.y-r.h+1&&p.y>=r.y-r.h)landing=Math.min(landing,r.y-r.h);
       for(const platform of this.platforms){if(p.x+p.w*.4>platform.x&&p.x-p.w*.4<platform.x+platform.w&&prevY<=platform.y+5&&p.y>=platform.y)landing=Math.min(landing,platform.y);}
 	      if(p.y>=landing){p.y=landing;p.vy=0;p.grounded=true;p.flying=false;p.flightGrace=0;p.jumps=0;p.airChain=0;p.airFloat=0;if(!p.wasGrounded)this.emit('land',{x:p.x,y:p.y});if(p.diving){p.diving=false;this.emit('groundFinish',{x:p.x,y:p.y});for(const e of this.enemies)if(e.hp>0&&Math.abs(e.x-p.x)<120&&Math.abs(e.y-p.y)<70)this.hitEnemy(e,p.form?30:18,240,sign(e.x-p.x),{finisher:true,slam:true});}}
     }
