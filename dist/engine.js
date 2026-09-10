@@ -224,7 +224,7 @@ export class GameEngine {
     p.x=clamp(p.x+p.vx*dt,this.saiyanCombat?96:40,WORLD.width-(this.saiyanCombat?96:90));if(this.activeEncounter)p.x=clamp(p.x,this.activeEncounter.left+22,this.activeEncounter.right-22);p.y=Math.max(ceiling,p.y+p.vy*dt);if(p.y===ceiling&&p.vy<0)p.vy=0;
     p.wasGrounded=p.grounded;p.grounded=false;
     // Sweep the horizontal movement so dashes cannot tunnel through rubble.
-    if(this.arrival)for(const r of this.rocks){
+    if(this.arrival||this.episode)for(const r of this.rocks){
       if(r.broken)continue;
       const half=p.w*.4,left=r.x-r.w,right=r.x+r.w,top=r.y-r.h;
       if(prevY>top+1&&prevY-p.h<r.y){
@@ -235,7 +235,7 @@ export class GameEngine {
     }
     if(p.vy>=0){
       let landing=WORLD.ground;
-      if(this.arrival)for(const r of this.rocks)if(!r.broken&&p.x+p.w*.4>r.x-r.w&&p.x-p.w*.4<r.x+r.w&&prevY<=r.y-r.h+1&&p.y>=r.y-r.h)landing=Math.min(landing,r.y-r.h);
+      if(this.arrival||this.episode)for(const r of this.rocks)if(!r.broken&&p.x+p.w*.4>r.x-r.w&&p.x-p.w*.4<r.x+r.w&&prevY<=r.y-r.h+1&&p.y>=r.y-r.h)landing=Math.min(landing,r.y-r.h);
       for(const platform of this.platforms){if(p.x+p.w*.4>platform.x&&p.x-p.w*.4<platform.x+platform.w&&prevY<=platform.y+5&&p.y>=platform.y)landing=Math.min(landing,platform.y);}
 	      if(p.y>=landing){p.y=landing;p.vy=0;p.grounded=true;p.flying=false;p.flightGrace=0;p.jumps=0;p.airChain=0;p.airFloat=0;if(!p.wasGrounded)this.emit('land',{x:p.x,y:p.y});if(p.diving){p.diving=false;this.emit('groundFinish',{x:p.x,y:p.y});for(const e of this.enemies)if(e.hp>0&&Math.abs(e.x-p.x)<120&&Math.abs(e.y-p.y)<70)this.hitEnemy(e,p.form?30:18,240,sign(e.x-p.x),{finisher:true,slam:true});}}
     }

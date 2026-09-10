@@ -1,6 +1,9 @@
 import {ARRIVAL,ARRIVAL_ID,readArrival,saveArrival} from './arrival-mission.js';
 import {drawWorldGuidance,worldGuidance} from './world-guidance.js';
 import {renderSagaScene} from './saga-map-view.js';
+import {CampaignEngine} from './episode-engine.js';
+import {CAMPAIGN_STAGES,episodeById,campaignUnlocked,readEpisodes,saveEpisodeCheckpoint,completeEpisode,EPISODE_ACTORS,episodePose} from './episode-campaign.js';
+import {drawEpisodeWorld,updateEpisodeHud} from './episode-view.js';
 import {drawArrivalBackground,drawArrivalTerrain,drawArrivalWorld,updateArrivalHud} from './arrival-view.js';
 import {KEY_MAP,KeyboardInput} from './keyboard.js';
 import {comboPose} from './combo-poses.js';
@@ -33,7 +36,7 @@ import {ParticlePool} from './vfx-pool.js?v=9';
 
 const $=id=>document.getElementById(id);
 const stage=$('stage'),canvas=$('game'),ctx=canvas.getContext('2d',{alpha:false});
-const engine=new GameEngine(),sound=new GameAudio(),controller=new XboxInput();engine.reset(101);
+const engine=new CampaignEngine(),sound=new GameAudio(),controller=new XboxInput();engine.reset(1101);
 let controllerConnected=false,padMenuDirection='',padMenuNext=0,controllerNotice='';
 const images={},atlases={},keys=new Set(),pointers=new Map(),pressed={};
 const keyMap=KEY_MAP,keyboard=new KeyboardInput();
@@ -44,11 +47,11 @@ let landingPulse=0;
 const duelCamera=new DuelCamera(),heroAnimator=new HeroAnimator();let renderTop=0,renderDelta=1/60;
 let touchLayout;
 let campaign=readProgress(),saga=readSaga(),campaignMode='story',storySaga='saiyan',selectedStage=101,selectedSkill='vigor',skillsWasPlaying=false,lastStoryReward=0,progressSaved=true;
-const storyStages=()=>storySaga==='freeza'?FREEZA_CHAPTERS:[ARRIVAL,...SAIYAN_CHAPTERS];
-const mapStages=()=>campaignMode==='story'?storyStages():STAGES;
-const getStage=id=>[ARRIVAL,...CHAPTERS,...STAGES].find(s=>s.id===id);
-const unlocked=id=>id===ARRIVAL_ID?true:id>=100?sagaUnlocked(saga,id):isUnlocked(campaign,id);
-const recordFor=id=>id===ARRIVAL_ID?{...readArrival(),bestCombo:0,orbs:0}:id>=100?sagaRecord(saga,id):stageRecord(campaign,id);
+const storyStages=()=>CAMPAIGN_STAGES;
+const mapStages=()=>CAMPAIGN_STAGES;
+const getStage=id=>CAMPAIGN_STAGES.find(s=>s.id===id);
+const unlocked=id=>campaignUnlocked(id);
+const recordFor=id=>({... (id===1101?readArrival():readEpisodes().missions[id]||{completed:false,checkpoint:0,bestTime:null}),bestCombo:0,orbs:0});
 const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const touch=matchMedia('(pointer: coarse)').matches||('ontouchstart' in window&&navigator.maxTouchPoints>0);
 const enemyRects=[
@@ -69,13 +72,15 @@ for(let i=0;i<7;i++){const o=document.createElement('i');$('orb-slots').append(o
 
 async function loadAssets(){
   try{
-    await Promise.all(['valley','enemies','kai-motion-v2','kai-solar-v2','enemy-defense-v2','forest-v6','saiyans-v6','goku-v8','kaioken-v8','saga-enemies-v8','portraits-v8','namek-map-v13','namek-stage-v13','namek-villains-v13','saiyan-bosses-v21','freeza-v20','combat-world-v21','combo-roster-v22','arrival-coast-v23','arrival-props-v23','coastal-creatures-v23','arrival-rocks-v24'].map(name=>new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>{images[name]=img;resolve();};img.onerror=()=>reject(new Error(name));img.src=`/assets/${name}.png`;})));
+    await Promise.all(['valley','enemies','kai-motion-v2','kai-solar-v2','enemy-defense-v2','forest-v6','saiyans-v6','goku-v8','kaioken-v8','saga-enemies-v8','portraits-v8','namek-map-v13','namek-stage-v13','namek-villains-v13','saiyan-bosses-v21','freeza-v20','combat-world-v21','combo-roster-v22','arrival-coast-v23','arrival-props-v23','coastal-creatures-v23','arrival-rocks-v24','piccolo-v26','gohan-child-v26'].map(name=>new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>{images[name]=img;resolve();};img.onerror=()=>reject(new Error(name));img.src=`/assets/${name}.png`;})));
     atlases.base=buildAtlas(images['kai-motion-v2'],6,5);atlases.solar=buildAtlas(images['kai-solar-v2'],6,5);atlases.defense=buildAtlas(images['enemy-defense-v2'],6,3);atlases.saiyans=buildAtlas(images['saiyans-v6'],6,3);
     atlases.comboRoster=buildAtlas(images['combo-roster-v22'],6,4);
     for(let row=0;row<4;row++){const height=row===0?105:125,base=atlases.comboRoster.frames[row*6+2].rect[3];for(let i=0;i<6;i++)atlases.comboRoster.frames[row*6+i].scale=height/base;}
     atlases.coastalCreatures=buildAtlas(images['coastal-creatures-v23'],6,2);
     atlases.arrivalProps=buildAtlas(images['arrival-props-v23'],3,2);
     atlases.arrivalRocks=buildAtlas(images['arrival-rocks-v24'],2,2);
+    atlases.piccolo=buildAtlas(images['piccolo-v26'],4,3);atlases.gohan=buildAtlas(images['gohan-child-v26'],3,2);
+    atlases.piccolo.scale=116/atlases.piccolo.frames[0].rect[3];atlases.gohan.scale=64/atlases.gohan.frames[0].rect[3];
     atlases.worldFX=gridAtlas(images['combat-world-v21']);
     atlases.freeza=buildAtlas(images['freeza-v20'],6,4);
     atlases.saiyanBosses=buildAtlas(images['saiyan-bosses-v21'],6,3);
@@ -229,6 +234,8 @@ function togglePause(){if(engine.dialogue||!$('skills-modal').hidden)return;if(!
 function openControls(){if(engine.dialogue||!$('skills-modal').hidden)return;setControlGuide(controllerConnected?'xbox':'keyboard');helpWasPlaying=engine.mode==='playing';if(helpWasPlaying)engine.pause();clearInput();$('controls-modal').hidden=false;}
 function closeControls(){$('controls-modal').hidden=true;if(helpWasPlaying){engine.resume();$('menu').hidden=true;}helpWasPlaying=false;clearInput();}
 function showMenu(mode){
+  if(engine.episode){$('menu').hidden=false;$('resume').hidden=mode!=='paused';$('victory-map').hidden=mode!=='won';$('menu-skills').hidden=true;$('menu-versus').hidden=true;$('menu-controls').hidden=mode==='won';$('menu-eyebrow').textContent=engine.story.biome;$('menu-title').textContent=mode==='won'?'FASE CONCLUÍDA':mode==='dead'?'RETOMAR CHECKPOINT':'PAUSADO';$('menu-description').textContent=mode==='won'?(engine.stageId===1102?'A fase 1.3 — O resgate de Gohan está disponível no mapa.':'A aproximação está pronta. A batalha com Raditz será a fase 2.1, em desenvolvimento.'):'Continue a partir do último objetivo salvo.';$('restart').textContent=mode==='won'?'JOGAR NOVAMENTE':'RETOMAR CHECKPOINT';$('result-stats').textContent=mode==='won'?formatTime(engine.time)+' · '+engine.story.objectives.length+' objetivos concluídos':'';return;}
+
   if(engine.versus){
     $('menu').hidden=false;$('resume').hidden=mode!=='paused';$('victory-map').hidden=true;$('menu-skills').hidden=true;$('menu-controls').hidden=false;$('menu-versus').hidden=false;
     $('menu-eyebrow').textContent='VERSUS · '+engine.versus.player.name+' × '+engine.versus.opponent.name;
@@ -243,7 +250,7 @@ function showMenu(mode){
   const labels={paused:['RESPIRE. DEPOIS, CONTINUE.','PAUSADO','Seu próximo golpe pode mudar a luta.'],dead:['CAIR TAMBÉM FAZ PARTE.','MAIS UMA VEZ?','Use a esquiva e observe a preparação dos inimigos.'],won:['7 ESFERAS. PODER COMPLETO.',engine.stageId===2?'FLORESTA CONQUISTADA':'VALE CONQUISTADO','Fase concluída. Veja seu progresso no mapa e tente superar seu melhor combo.']};
   if(engine.saiyanCombat){labels.paused=['','PAUSADO',''];labels.dead=['','DERROTADO',''];}
   if(engine.story&&mode==='won'){const final=engine.story.saga==='freeza'?engine.story.chapter===4:engine.story.chapter===3;labels.won=[`FASE ${engine.story.sagaNumber||1} · CAPÍTULO ${engine.story.chapter}`,engine.story.bossName+' VENCIDO',final?(engine.story.saga==='freeza'?'Saga Freeza concluída. Namekusei foi salvo.':'Saga Saiyajin concluída. Namekusei foi desbloqueado.'):(lastStoryReward?'Próximo capítulo desbloqueado. Você recebeu 4 pontos de habilidade.':'Resultado registrado. Suas habilidades continuam disponíveis no mapa.')];}
-  if(engine.arrival){labels.won=['EPISÓDIO 1 / FASE 1.1','UM PODER DESCONHECIDO','Gohan foi levado. Continua na fase 1.2: Uma aliança improvável (em desenvolvimento).'];labels.dead=['CHECKPOINT DISPONÍVEL','NÃO DESISTA','Você pode retomar do último objetivo concluído.'];}
+  if(engine.arrival){labels.won=['EPISÓDIO 1 / FASE 1.1','UM PODER DESCONHECIDO','Gohan foi levado. A fase 1.2 — Uma aliança improvável está disponível no mapa.'];labels.dead=['CHECKPOINT DISPONÍVEL','NÃO DESISTA','Você pode retomar do último objetivo concluído.'];}
   const t=labels[mode];$('menu-eyebrow').textContent=t[0];$('menu-title').textContent=t[1];$('menu-description').textContent=mode==='won'&&engine.stageId===1?'Floresta Celeste desbloqueada! Enfrente a patrulha saiyajin na fase 2.':t[2];$('restart').textContent=mode==='won'?'JOGAR NOVAMENTE':'RECOMEÇAR A FASE';
   if(engine.arrival){$('restart').textContent=mode==='won'?'JOGAR NOVAMENTE':'RETOMAR CHECKPOINT';$('menu-skills').hidden=true;if(mode==='won')$('result-stats').textContent=`4 objetivos · 2 encontros · ${formatTime(engine.time)}`;return;}
   if(mode!=='paused')for(const [value,label] of [[formatTime(engine.time),'TEMPO'],[engine.maxCombo,'MAIOR COMBO'],[engine.collected+'/7','ESFERAS']]){const d=document.createElement('div'),s=document.createElement('strong');s.textContent=value;d.append(s,document.createTextNode(label));$('result-stats').append(d);}
@@ -255,9 +262,10 @@ function formatTime(t){return `${String(Math.floor(t/60)).padStart(2,'0')}:${Str
 function hudUpdate(){
   syncScreen();
   updateArrivalHud(engine,document,controllerConnected);
+  document.body.classList.toggle('child-segment',!!engine.episode&&engine.p.character==='gohan');updateEpisodeHud(engine,document);
   const p=engine.p;const specialCost=engine.story?(engine.skills.has('kame')?32:40):p.form?28:40;$('special-fill').style.width=Math.min(100,p.ki/specialCost*100)+'%';$('special-fill').parentElement.classList.toggle('ready',p.ki>=specialCost);$('health-fill').style.width=100*p.hp/engine.maxHp+'%';$('ki-fill').style.width=p.ki+'%';
   $('health-text').textContent=`${Math.ceil(p.hp)} / ${engine.maxHp}`;$('ki-text').textContent=p.form?`KI ${Math.floor(p.ki)} · ${Math.ceil(p.formTime)}s`:`KI ${Math.floor(p.ki)} / 100`;
-  $('hero-name').textContent=engine.versus?engine.versus.player.name.toUpperCase():engine.story?'GOKU':'KAI';
+  $('hero-name').textContent=engine.episode?EPISODE_ACTORS[p.character].name:engine.versus?engine.versus.player.name.toUpperCase():engine.story?'GOKU':'KAI';
   $('form-label').textContent=engine.story?(p.form?`KAIOKEN ×${engine.kaiokenLevel} · DESGASTE ${Math.round(p.formFatigue)}%`:p.formCooldown>0?`RECUPERANDO ${Math.ceil(p.formCooldown)}s`:engine.story.chapter===1?'FORMA BASE':p.ki>=60?'KAIOKEN '+(controllerConnected?'[R3]':'[T]'):'FORMA BASE'):p.form?'ASCENSÃO SOLAR':p.ki>=100?(controllerConnected?'DESPERTAR [R3]':'DESPERTAR [T]'):'FORMA BASE';
   $('orb-total').textContent=engine.collected;Array.from($('orb-slots').children).forEach((o,i)=>o.classList.toggle('collected',engine.orbs.some(v=>v.id===i+1&&v.got)));
   $('orb-slots').setAttribute('aria-label',`${engine.collected} de 7 esferas`);
@@ -279,6 +287,7 @@ function hudUpdate(){
   if(engine.activeEncounter)$('objective').textContent=`ARENA · ${engine.enemies.filter(e=>engine.activeEncounter.ids.includes(e.id)&&e.hp>0).length} INIMIGOS`;
   if(engine.activeEncounter)$('direction').textContent='LIMPE A ARENA';
   const guidance=worldGuidance(engine);$('direction').textContent=guidance?(guidance.x<p.x?'← ':'→ ')+guidance.label:'';
+  if(engine.episode){$('special-name').textContent=EPISODE_ACTORS[p.character].technique;$('form-label').textContent='EPISÓDIO 1';if(p.character==='gohan')$('timing-cue').textContent='';}
 }
 
 function burst(x,y,n,color,power=170,gravity=300){
@@ -355,14 +364,18 @@ function processEvents(){
       case 'versusFinish':clearInput();$('finish-title').textContent=(e.winner==='player'?'VITÓRIA':'DERROTA')+(engine.versus.matchOver?'':' · ROUND '+engine.versus.round);$('finish-title').dataset.result=e.winner;break;
       case 'versusEnd':clearInput();$('finish-title').hidden=true;showMenu(e.winner==='player'?'won':'dead');break;
       case 'gameover':clearInput();if(engine.versus)showMenu('dead');else setTimeout(()=>showMenu('dead'),650);break;
+      case 'characterChanged':clearInput();trails=[];effects=[];particlePool.clear();heroAnimator.reset();duelCamera.reset();cam=clamp(engine.p.x-W*.35,0,Math.max(0,engine.story.width-W));drawPortrait();break;
+      case 'episodeCheckpoint':progressSaved=saveEpisodeCheckpoint(e.id,e.checkpoint,e.time).saved;break;
+      case 'makankosappo':effects.push({type:'piccoloBeam',x:e.x,y:e.y,dir:e.dir,life:.35,max:.35});break;
+      case 'gohanPulse':ring(e.x,e.y,'#ffca42',40,.6);break;
       case 'arrivalCheckpoint':{const old=readArrival();progressSaved=saveArrival({...old,checkpoint:e.checkpoint,time:e.time}).saved;if(!progressSaved)engine.arrival.caption='CHECKPOINT NESTA SESSAO';}break;
-      case 'victory':{if(engine.arrival){const old=readArrival();progressSaved=saveArrival({...old,completed:true,checkpoint:0,time:0,bestTime:old.bestTime?Math.min(old.bestTime,engine.time):engine.time}).saved;clearInput();showMenu('won');break;}lastStoryReward=engine.story&&!sagaRecord(saga,engine.stageId).completed?4:0;const result=engine.story?finishSaga(saga,engine.stageId,engine.time,engine.maxCombo,engine.collected):recordVictory(campaign,engine.time,engine.maxCombo,engine.stageId);if(engine.story){saga=result.progress;if(engine.stageId===103)storySaga='freeza';}else campaign=result.progress;progressSaved=result.saved;}clearInput();burst(engine.p.x,engine.p.y-60,85,'#ffe4a2',310,-30);setTimeout(()=>showMenu('won'),900);break;
+      case 'victory':{if(engine.episode){progressSaved=completeEpisode(engine.stageId,engine.time).saved;clearInput();showMenu('won');break;}if(engine.arrival){const old=readArrival();progressSaved=saveArrival({...old,completed:true,checkpoint:0,time:0,bestTime:old.bestTime?Math.min(old.bestTime,engine.time):engine.time}).saved;clearInput();showMenu('won');break;}lastStoryReward=engine.story&&!sagaRecord(saga,engine.stageId).completed?4:0;const result=engine.story?finishSaga(saga,engine.stageId,engine.time,engine.maxCombo,engine.collected):recordVictory(campaign,engine.time,engine.maxCombo,engine.stageId);if(engine.story){saga=result.progress;if(engine.stageId===103)storySaga='freeza';}else campaign=result.progress;progressSaved=result.saved;}clearInput();burst(engine.p.x,engine.p.y-60,85,'#ffe4a2',310,-30);setTimeout(()=>showMenu('won'),900);break;
     }
   }
 }
 
 function drawPortrait(){
-  if(!loaded)return;const c=$('portrait').getContext('2d');c.imageSmoothingEnabled=false;c.clearRect(0,0,100,100);c.fillStyle='#132b30';c.fillRect(0,0,100,100);
+  if(!loaded)return;const c=$('portrait').getContext('2d');c.imageSmoothingEnabled=false;c.clearRect(0,0,100,100);c.fillStyle='#fff3ca';c.fillRect(0,0,100,100);
   const atlas=playerAtlas(engine.p.form);const [x,y,w,h]=atlas.frames[0].rect;c.drawImage(atlas.image,x+w*.2,y,w*.6,h*.4,0,0,100,100);
 }
 function buildAtlas(image,cols,rows){
@@ -370,7 +383,7 @@ function buildAtlas(image,cols,rows){
   // Decode the neutral color-key matte at texture-load time. The source atlas stays intact.
   // Component boundaries preserve enclosed stone highlights and small white eye details.
   const sagaAsset=/goku-v8|kaioken-v8|saga-enemies-v8|arrival-props-v23|coastal-creatures-v23|arrival-rocks-v24/.test(image.src||'');
-  const nativeAlpha=/freeza-v20|saiyan-bosses-v21|saiyans-v6|namek-villains-v13/.test(image.src||'')||sagaAsset;
+  const nativeAlpha=/piccolo-v26|gohan-child-v26|freeza-v20|saiyan-bosses-v21|saiyans-v6|namek-villains-v13/.test(image.src||'')||sagaAsset;
   if(sagaAsset)for(let i=0;i<data.length;i+=4){if(data[i]>150&&data[i+2]>110&&data[i+1]<110&&data[i]-data[i+1]>65&&data[i+2]-data[i+1]>50)data[i+3]=0;}
   const count=c.width*c.height,mask=new Uint8Array(count),queue=new Int32Array(count);
   for(let i=0;!nativeAlpha&&i<count;i++){const r=data[i*4],g=data[i*4+1],b=data[i*4+2];if(Math.min(r,g,b)>85&&Math.max(r,g,b)-Math.min(r,g,b)<20)mask[i]=1;}
@@ -382,14 +395,14 @@ function buildAtlas(image,cols,rows){
     if(edge||tail>90&&high-low>22)for(let n=0;n<tail;n++)data[queue[n]*4+3]=0;
   }
   ac.putImageData(pixels,0,0);
-  if(/freeza-v20|saiyan-bosses-v21|combo-roster-v22|coastal-creatures-v23/.test(image.src||'')){
+  if(/piccolo-v26|gohan-child-v26|freeza-v20|saiyan-bosses-v21|combo-roster-v22|coastal-creatures-v23/.test(image.src||'')){
     // Pack connected sprites individually: adjacent limbs overlap bounding rectangles.
     const parts=findSpriteFrames(data,c.width,c.height,cols,rows,true),packed=document.createElement('canvas');
     const cw=Math.max(...parts.map(f=>f.rect[2]))+8,ch=Math.max(...parts.map(f=>f.rect[3]))+8;
-    packed.width=cw*6;packed.height=ch*rows;
+    packed.width=cw*cols;packed.height=ch*rows;
     const pc=packed.getContext('2d'),out=pc.createImageData(packed.width,packed.height);
     const completeFrames=parts.map((f,i)=>{
-      const [sx,sy,w,h]=f.rect,tx=i%6*cw+4,ty=Math.floor(i/6)*ch+4;
+      const [sx,sy,w,h]=f.rect,tx=i%cols*cw+4,ty=Math.floor(i/cols)*ch+4;
       for(const pixel of f.pixels){const dest=((ty+Math.floor(pixel/c.width)-sy)*packed.width+tx+pixel%c.width-sx)*4;out.data.set(data.subarray(pixel*4,pixel*4+4),dest);}
       const feet=Array.from(f.pixels).filter(p=>Math.floor(p/c.width)>=sy+h*.72);const anchor=feet.length?(feet.reduce((sum,p)=>sum+p%c.width-sx,0)/feet.length)/w:f.anchor;
       return {rect:[tx,ty,w,h],anchor};
@@ -417,8 +430,9 @@ function buildAtlas(image,cols,rows){
   }
   return {image:c,frames,scale:105/frames[0].rect[3]};
 }
-function playerAtlas(form=false){return engine.versus?fighterAtlas(engine.versus.player):engine.story?(form?atlases.kaioken:atlases.goku):(form?atlases.solar:atlases.base);}
+function playerAtlas(form=false){return engine.episode&&engine.p.character!=='goku'?atlases[engine.p.character]:engine.versus?fighterAtlas(engine.versus.player):engine.story?(form?atlases.kaioken:atlases.goku):(form?atlases.solar:atlases.base);}
 function playerPose(p){
+  if(engine.episode&&p.character!=='goku')return {atlas:atlases[p.character],frame:episodePose(p),combo:false};
   const motion=heroAnimator.sample(p,renderDelta);
   const extra=comboPose(p,engine.versus?engine.versus.player.id:engine.story&&!p.form?'goku':null);
   if(extra!==null)return {atlas:atlases.comboRoster,frame:extra,combo:false,motion};
@@ -490,7 +504,7 @@ function renderArena(){
   ctx.save();for(const boundary of [a.left,a.right]){const x=boundary-cam;if(x< -20||x>W+20)continue;ctx.strokeStyle='#e7c783';ctx.lineWidth=2;ctx.globalAlpha=.5+Math.sin(engine.visualTime*4)*.15;ctx.beginPath();ctx.moveTo(x,WORLD.ground);ctx.lineTo(x,120);ctx.stroke();for(let i=0;i<8;i++){ctx.fillStyle='#ffe2a7';ctx.fillRect(x-3,WORLD.ground-(engine.visualTime*70+i*42)%340,6,13);}}ctx.restore();
 }
 function renderPortal(){
-  if(engine.arrival)return;
+  if(engine.arrival||engine.episode)return;
   const x=6140-cam,y=WORLD.ground-50;if(x< -70||x>W+70)return;
   const open=engine.collected===7&&engine.bossDefeated;
   ctx.save();ctx.strokeStyle=open?'#e7ffcb':'#91c9bc88';ctx.lineWidth=3;ctx.shadowColor=open?'#cbff86':'#44dcc1';ctx.shadowBlur=open?25:10;
@@ -569,6 +583,7 @@ function renderShots(){
     ctx.save();ctx.translate(x,y);ctx.rotate(Math.atan2(s.vy,s.vx)+Math.PI/2);worldSprite(15,0,0,s.r*2.5,s.r*3.5);ctx.restore();
   }
 }
+function cBeam(x,y,dir,t){ctx.save();ctx.translate(x,y);ctx.scale(dir,1);ctx.fillStyle='#ffe36f';ctx.fillRect(0,-3,900,6);ctx.strokeStyle='#bd74e4';ctx.lineWidth=2;ctx.beginPath();for(let i=0;i<900;i+=6){const yy=Math.sin(i*.085-t*20)*8;if(i===0)ctx.moveTo(i,yy);else ctx.lineTo(i,yy);}ctx.stroke();ctx.restore();}
 function renderEffects(){
   for(const e of effects){
     if(engine.saiyanCombat&&e.type==='number')continue;
@@ -579,6 +594,7 @@ function renderEffects(){
       else drawWorldEffect(worldSprite,e,x,y,reduced);
       ctx.restore();continue;
     }
+    if(e.type==='piccoloBeam'){ctx.globalAlpha=1-t;cBeam(x,y,e.dir,t);ctx.restore();continue;}
     if(e.type==='feedback'){ctx.globalAlpha=Math.min(1,e.life*4);ctx.font='bold 13px Arial';ctx.textAlign='center';ctx.lineWidth=4;ctx.strokeStyle='#071322';ctx.strokeText(e.text,engine.p.x-cam,engine.p.y+43);ctx.fillStyle=e.color;ctx.fillText(e.text,engine.p.x-cam,engine.p.y+43);ctx.restore();continue;}
     if(e.type==='comboArc'){
       ctx.translate(x,y);ctx.scale(e.dir,1);ctx.globalAlpha=(1-t)*.7;
@@ -630,7 +646,7 @@ function render(dt){
   renderDelta=dt*(engine.versus?.finish?.scale||1);
   const screenW=W,screenH=H,p=engine.p;
   const opponent=engine.versus?engine.boss:engine.activeEncounter?engine.enemies.filter(e=>e.hp>0&&engine.activeEncounter.ids.includes(e.id)).sort((a,b)=>Math.abs(a.x-p.x)-Math.abs(b.x-p.x))[0]:null;
-  const adaptive=opponent&&engine.mode!=='intro';let target=clamp(p.x-W*.35,0,Math.max(0,(engine.arrival?ARRIVAL.width:WORLD.width)-W));
+  const adaptive=opponent&&engine.mode!=='intro';let target=clamp(p.x-W*.35,0,Math.max(0,(engine.episode?engine.story.width:engine.arrival?ARRIVAL.width:WORLD.width)-W));
   if(engine.mode==='intro'){target=0;p.anim=engine.visualTime;}
   zoomImpulse=Math.max(0,zoomImpulse-dt*.16);ctx.save();renderTop=0;
   if(adaptive){
@@ -641,6 +657,7 @@ function render(dt){
   }else{duelCamera.reset();cam+=(target-cam)*Math.min(1,dt*7);cameraZoom=1;}
   renderBackground();renderTerrain();renderHazards();renderPortal();renderOrbs();renderArena();
   if(engine.arrival)drawArrivalWorld(ctx,engine,cam,atlases,sprite,reduced);
+  if(engine.episode)drawEpisodeWorld(ctx,engine,cam,atlases,sprite);
   if(engine.mode==='intro'){
     const previewX=W*.71;shadow(previewX,WORLD.ground,30);const a=atlases.goku,f=a.frames[Math.floor(engine.visualTime*2)%2];sprite(a.image,f.rect,previewX,WORLD.ground,1,a.scale*1.15,{anchor:f.anchor});
     if(W>680){shadow(W*.9,WORLD.ground,28);const a=atlases.sagaEnemies,f=a.frames[0];sprite(a.image,f.rect,W*.9,WORLD.ground,-1,115/f.rect[3],{anchor:f.anchor});}
@@ -677,22 +694,28 @@ function openMap(){
 }
 function closeMap(){$('world-map').hidden=true;$('menu').hidden=true;$('intro').hidden=false;clearInput();syncScreen();$('start').focus({preventScroll:true});}
 function renderMap(){
-  const levels=mapStages(),nodes=$('map-nodes'),freeza=campaignMode==='story'&&storySaga==='freeza',total=levels.length;$('world-map').classList.toggle('story-map',campaignMode==='story');$('world-map').classList.toggle('freeza-map',freeza);$('map-heading').textContent=campaignMode==='story'?(freeza?'FASE 2 · SAGA FREEZA':'FASE 1 · SAGA SAIYAJIN'):'TREINO ORIGINAL';$('map-mode').textContent=campaignMode==='story'?'TREINO ORIGINAL':'HISTÓRIA';$('map-saga').hidden=campaignMode!=='story';$('map-saga').textContent=freeza?'SAGA SAIYAJIN':'SAGA FREEZA';$('map-skills').hidden=campaignMode!=='story';$('map-skills').textContent=controllerConnected?'Y · HABILIDADES':'HABILIDADES';if(controllerConnected)$('map-mode').textContent='X · '+$('map-mode').textContent;
-  nodes.replaceChildren();for(const level of levels){
-    const b=document.createElement('button');b.className='map-node';b.dataset.stage=level.id;b.style.setProperty('--x',level.pos[0]+'%');b.style.setProperty('--y',level.pos[1]+'%');
-    const art=document.createElement(level.chapter?'canvas':'span');art.className='node-art';
-    if(level.chapter){art.width=200;art.height=150;const ac=art.getContext('2d');ac.imageSmoothingEnabled=false;const atlas=level.mission?atlases.goku:freeza?atlases.namekVillains:atlases.sagaEnemies,row=freeza?({201:1,202:2,203:4,204:5}[level.id]):level.chapter-1;const [sx,sy,sw,sh]=atlas.frames[row*6].rect,scale=Math.min(170/sw,140/sh);ac.drawImage(atlas.image,sx,sy,sw,sh,(200-sw*scale)/2,150-sh*scale,sw*scale,sh*scale);}else art.style.backgroundPosition=level.crop.join('% ')+'%';
-    const number=document.createElement('small');number.textContent=level.mission?'FASE 1.1':level.chapter?'CAPÍTULO '+level.chapter:'FASE '+String(level.id).padStart(2,'0');
-    const name=document.createElement('strong');name.textContent=level.mission?'UM PODER DESCONHECIDO':level.chapter?level.bossName:level.name;
-    const status=document.createElement('span');status.className='node-status';const completed=recordFor(level.id).completed,ready=unlocked(level.id);
-    status.textContent=completed?'CONCLUÍDO':level.available?(ready?'DISPONÍVEL':'BLOQUEADO'):'EM BREVE';b.classList.toggle('locked',!!level.available&&!ready);b.classList.toggle('selected',level.id===selectedStage);b.classList.toggle('upcoming',!level.available);b.classList.toggle('completed',completed);b.setAttribute('aria-pressed',String(level.id===selectedStage));b.append(art,number,name,status);b.addEventListener('click',()=>{selectedStage=level.id;renderMap();});nodes.append(b);
+  const levels=mapStages(),nodes=$('map-nodes');$('world-map').classList.add('story-map');$('world-map').classList.remove('freeza-map');$('map-heading').textContent='TERRA · A CHEGADA DE RADITZ';$('map-mode').hidden=true;$('map-saga').hidden=false;$('map-saga').disabled=true;$('map-saga').textContent='FREEZA · EM BREVE';$('map-skills').hidden=true;
+  nodes.replaceChildren();
+  for(const level of levels){
+    const b=document.createElement('button');b.className='map-node';b.dataset.stage=level.id;
+    const art=document.createElement('canvas');art.className='node-art';art.width=200;art.height=150;
+    const ac=art.getContext('2d');ac.imageSmoothingEnabled=false;
+    const atlas=level.id===1102?atlases.piccolo:level.id===1201?atlases.saiyanBosses:atlases.goku;
+    const [sx,sy,sw,sh]=atlas.frames[0].rect,scale=Math.min(170/sw,140/sh);ac.drawImage(atlas.image,sx,sy,sw,sh,(200-sw*scale)/2,150-sh*scale,sw*scale,sh*scale);
+    const number=document.createElement('small');number.textContent='FASE '+(level.number||'1.1');
+    const name=document.createElement('strong');name.textContent=level.name;
+    const status=document.createElement('span');status.className='node-status';const record=recordFor(level.id),ready=unlocked(level.id);
+    status.textContent=!level.available?'EM BREVE':record.completed?'CONCLUÍDA':!ready?'BLOQUEADA':record.checkpoint?'EM ANDAMENTO':'DISPONÍVEL';
+    b.classList.toggle('locked',!ready);b.classList.toggle('selected',level.id===selectedStage);b.classList.toggle('completed',record.completed);b.setAttribute('aria-pressed',String(level.id===selectedStage));b.append(art,number,name,status);b.addEventListener('click',()=>{selectedStage=level.id;renderMap();});nodes.append(b);
   }
-  const level=getStage(selectedStage),record=recordFor(selectedStage),ready=unlocked(selectedStage);$('map-number').textContent=level.biome;$('map-title').textContent=level.name;$('map-description').textContent=level.detail;$('map-enemies').textContent=level.enemy;$('map-goal').textContent=level.mission?'4 objetivos / investigação e resgate':level.available?'7 esferas + '+(level.bossName||'chefe'):'PRÓXIMA SAGA';
-  $('map-preview').style.backgroundImage=level.mission?"url('/assets/arrival-coast-v23.png')":level.saga==='freeza'?"url('/assets/namek-stage-v13.png')":level.id===2?"url('/assets/forest-v6.png')":level.chapter||level.id===1?"url('/assets/valley.png')":"url('/assets/world-map-v5.png')";$('map-preview').style.backgroundSize=level.chapter||level.id<=2?'cover':'280%';
+  const level=getStage(selectedStage)||levels[0],record=recordFor(level.id),ready=unlocked(level.id);
+  $('map-number').textContent=level.biome;$('map-title').textContent=level.name;$('map-description').textContent=level.detail;$('map-enemies').textContent=level.enemy;
+  $('map-goal').textContent=level.id===1101?'Investigar e ajudar o morador':level.id===1102?'Piccolo · abrir a rota até Raditz':level.id===1103?'Goku / Piccolo / Gohan · preparar o resgate':'Batalha em equipe · próxima parte';
+  $('map-preview').style.backgroundImage=level.id===1101?"url('/assets/arrival-coast-v23.png')":"url('/assets/valley.png')";
   renderSagaScene(document,level,atlases);
-  $('map-play').disabled=!level.available||!ready;$('map-play-label').textContent=!level.available?'EM DESENVOLVIMENTO':!ready?'CONCLUA O CAPÍTULO ANTERIOR':record.completed?'JOGAR NOVAMENTE':level.mission?(readArrival().checkpoint?'RETOMAR CHECKPOINT':'INICIAR FASE 1.1'):'INICIAR '+(level.chapter?'CAPÍTULO':'FASE');
-  $('map-stage-status').textContent=!level.available?'Disponível em uma atualização futura.':!ready?'Conclua a etapa anterior para desbloquear.':record.completed?'Recorde: '+formatTime(record.bestTime)+' · combo '+record.bestCombo:'Pronto para jogar.';
-  const records=campaignMode==='story'?levels.map(l=>recordFor(l.id)):Object.values(campaign.stages),completed=records.filter(r=>r.completed).length;$('map-orbs').textContent=records.reduce((n,r)=>n+r.orbs,0)+' / '+levels.filter(l=>!l.mission).length*7;$('map-completed').textContent=completed+' / '+total;$('map-best-combo').textContent=Math.max(0,...records.map(r=>r.bestCombo));$('map-save-note').textContent=progressSaved?'Progresso salvo neste dispositivo.':'Progresso disponível apenas nesta sessão.';
+  $('map-play').disabled=!level.available||!ready;$('map-play-label').textContent=!level.available?'EM DESENVOLVIMENTO':!ready?'CONCLUA A FASE ANTERIOR':record.completed?'JOGAR NOVAMENTE':record.checkpoint?'RETOMAR CHECKPOINT':'INICIAR FASE '+(level.number||'1.1');
+  $('map-stage-status').textContent=!level.available?'Será implementada na próxima parte do plano.':!ready?'Conclua a fase '+(level.id===1102?'1.1':'1.2')+' para continuar.':record.completed?'Melhor tempo: '+formatTime(record.bestTime):record.checkpoint?'Objetivo '+(record.checkpoint+1)+' salvo.':'Pronto para jogar.';
+  $('map-orbs').parentElement.hidden=true;$('map-best-combo').parentElement.hidden=true;$('map-completed').textContent=levels.filter(l=>recordFor(l.id).completed).length+' / 3';$('map-save-note').textContent=progressSaved?'Confrontos antigos desativados na campanha. Versus e saves preservados.':'Progresso disponível apenas nesta sessão.';
 }
 
 function setControlGuide(mode){
@@ -742,15 +765,15 @@ function pollController(){
 }
 function renderCutin(){
   if(engine.saiyanCombat)return;
-  const e=effects.find(e=>e.type==='cutin');if(!e||reduced)return;
+  const e=effects.find(e=>e.type==='cutin');if(!e||reduced||engine.episode&&engine.p.character!=='goku')return;
   const t=1-e.life/e.max,atlas=playerAtlas(e.solar),f=atlas.frames[27];
   ctx.save();ctx.globalAlpha=Math.min(1,(1-t)*4);ctx.fillStyle='#031021dc';ctx.fillRect(0,H*.2,W,H*.23);ctx.strokeStyle=e.solar?'#ffdc79':'#8bf0ff';ctx.lineWidth=2;ctx.strokeRect(-2,H*.2,W+4,H*.23);
   const [sx,sy,sw,sh]=f.rect;ctx.drawImage(atlas.image,sx,sy,sw,sh*.55,W*.12,H*.205,H*.16,H*.21);
   ctx.fillStyle=e.solar?'#ffe495':'#d1fcff';ctx.textAlign='center';ctx.font=`italic 900 ${Math.min(32,W*.05)}px Arial`;ctx.fillText(engine.story?(e.solar?'KAIOKEN · KAMEHAMEHA':'KAMEHAMEHA'):e.solar?'EXPLOSÃO SOLAR':'RAIO DE KI',W*.6,H*.33);ctx.restore();
 }
 
-$('map-mode').addEventListener('click',()=>{campaignMode=campaignMode==='story'?'arcade':'story';selectedStage=campaignMode==='story'?storyStages()[0].id:1;renderMap();clearInput();});
-$('map-saga').addEventListener('click',()=>{storySaga=storySaga==='saiyan'?'freeza':'saiyan';selectedStage=storyStages()[0].id;renderMap();clearInput();});
+$('map-mode').hidden=true;
+$('map-saga').disabled=true;
 $('map-skills').addEventListener('click',openSkills);$('menu-skills').addEventListener('click',openSkills);$('skills-close').addEventListener('click',closeSkills);
 $('dialogue-next').addEventListener('click',()=>{engine.advanceDialogue();clearInput();});$('dialogue-skip').addEventListener('click',()=>{engine.advanceDialogue(true);clearInput();});
 $('skill-buy').addEventListener('click',()=>{const result=buySkill(saga,selectedSkill);saga=result.progress;progressSaved=result.saved;renderSkills();$('skill-feedback').textContent=result.reason||(result.saved?'Habilidade aprendida. Será aplicada ao iniciar o capítulo.':'Habilidade aplicada nesta sessão; não foi possível salvar neste navegador.');});

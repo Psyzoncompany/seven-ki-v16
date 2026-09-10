@@ -1,6 +1,6 @@
 # Plano de expansão da Saga Saiyajin
 
-Status: execução por partes. Fase 1.1 implementada como abertura independente; os demais episódios permanecem planejados.
+Status: execução por partes. Fases 1.1, 1.2 e 1.3 implementadas. Campanha limitada a essa sequência; confronto 2.1 com Raditz e demais episódios permanecem planejados. Versus e saves antigos preservados.
 
 ## 1. Objetivo
 
@@ -458,7 +458,7 @@ Uma solicitação para executar uma parte autoriza trabalhar nela. Não avançar
 - [ ] Parte 7 — Preparação na Terra, Nappa e Vegeta.
 - [ ] Parte 8 — Revisão completa.
 
-Entrega atual: fase 1.1 — Um poder desconhecido. Próxima fase narrativa: 1.2 — Uma aliança improvável, com Piccolo. O bloqueio de Freeza e a reorganização global da campanha continuam pendentes; a fase 1.1 não conclui integralmente as Partes 1, 2 ou 4.
+Entrega atual: fases 1.1 → 1.2 → 1.3. Próxima parte narrativa: 2.1 — Raditz, batalha em equipe. A entrada pública da campanha bloqueia os confrontos antigos e Freeza; os motores e dados antigos permanecem disponíveis internamente para preservar o Versus e as conquistas. As Partes 2 e 3 ainda têm entregas futuras, incluindo Outro Mundo, Kuririn e Gohan treinado.
 
 ### Fase 1.1 — implementação entregue
 
@@ -488,3 +488,19 @@ Limites desta entrega: Goku é o único personagem controlável nesta fase. Goha
 | Fase 1.1 | Implementada | `arrival-mission.js`, `arrival-view.js`, `coastal-creatures.js`, `arrival.css` | 95 testes aprovados; cenas e recortes renderizados; navegador sem erros capturados, teclado, retomada e layouts desktop/celular conferidos | Fase 1.2, bloqueio de Freeza e expansão global do mapa |
 
 Atualizar esta tabela ao concluir cada entrega, mantendo este documento como referência única do plano.
+
+### Fases 1.2 e 1.3 — entrega de 10/09/2026
+
+- Fase 1102 / 1.2: Piccolo jogável, aliança com Goku, dois confrontos curtos contra criaturas, abertura de rocha na encosta e localização da rota. Golpes com maior alcance, rajada rápida e estreita e Makankosappo com faixa de acerto precisa; nenhuma transformação ou técnica de Kaioh nessa fase.
+- Fase 1103 / 1.3: aproximação com Goku, abertura do ponto de apoio com Piccolo, trecho delimitado de Gohan dentro de uma representação em corte da cápsula e retorno a Goku para preparar a batalha. Gohan só caminha e se protege; não voa nem executa combos ou especiais. Sua energia aparece involuntariamente após três segundos de proteção; seis segundos concluem o objetivo.
+- Trocas guiadas restauram vida e KI conforme o personagem e limpam ataques, projéteis, defesa, perseguição, efeitos e comandos pendentes. As criaturas já vencidas e as rochas removidas são reconstruídas ao retomar cada checkpoint.
+- Objetivos, alturas, seta, distância e minimapa derivam da missão ativa. Aliados aparecem na aproximação, sem atacar ou concluir objetivos pelo jogador.
+- Sequência pública: 1.1 → 1.2 → 1.3 → 2.1 em breve. Treinos antigos e capítulos 101–103 / 201–204 não iniciam por `CampaignEngine.start`, mesmo com save avançado. O Versus mantém os personagens e arenas existentes.
+- Save adicional `sevenki-episode-one-v1`: checkpoints, tempo e conclusões independentes. Nenhuma chave antiga é removida ou regravada pela expansão. Quem já concluiu o antigo Raditz pode acessar 1.2 e 1.3 para replay; jogadores novos seguem os pré-requisitos. Repetir fases não concede pontos de habilidade duplicados.
+- HUD com arte raster própria em pixel art, moldura de esferas/Nimbus/escamas verdes em fundo claro. Tipografia VT323 hospedada localmente com licença OFL; textos de instrução continuam abaixo do campo de combate.
+
+Arquivos: `episode-campaign.js`, `episode-engine.js`, `episode-view.js`, `dragon-pixel.css`, integração em `game.js`, `world-guidance.js`, `saga-map-view.js`, `engine.js` e `index.html`. Artes: `assets/dragon-hud-v26.png`, `assets/piccolo-v26.png`, `assets/gohan-child-v26.png`. Especificações da geração em `assets/episode-art-v26.md`.
+
+Validação: 108 testes aprovados, incluindo as novas sequências com ataques reais, especial nas rochas, confinamento de Gohan, checkpoints, bloqueio de campanha, preservação de saves e cenas assistidas/puladas. Carregador real de atlas validou 12 poses de Piccolo e seis de Gohan; imagens conferidas em `output/episode/`, geradas por `scripts/check-episode-art.mjs`. Alterações simples de texto/CSS não receberam testes automatizados adicionais, conforme preferência do usuário.
+
+Limites: navegador e controle físico indisponíveis nesta sessão; layout final desktop/celular ainda precisa de conferência no navegador. Cenários da travessia reutilizam o vale existente. A encenação usa diálogos com poses e posicionamento dos personagens; cenas cinematográficas completas e a intervenção ofensiva de Gohan pertencem à fase 2.1. Não há luta contra Raditz nem resgate concluído nesta entrega. Não avançar para Nappa, Vegeta ou Freeza automaticamente.

@@ -1,0 +1,28 @@
+@font-face{font-family:'Seven Pixel';src:url('/assets/fonts/VT323-Regular.ttf') format('truetype');font-style:normal;font-weight:400;font-display:swap}
+body,button,select,input,.hud,.hud-name,.map-node,.map-node strong,.map-header h2,.map-detail h3,.saga-scene-copy,.dialogue-panel,.dialogue-copy h2,.arrival-radar,#gameplay-notes .arrival-objective,#gameplay-notes #arrival-radio,#gameplay-notes .timing-cue,#gameplay-notes .world-direction{font-family:'Seven Pixel',monospace;font-weight:400}
+.hud .player-hud,body.minimal-combat .player-hud{position:relative;box-sizing:border-box;width:300px;min-height:100px;padding:21px 24px 20px 85px;display:block;background:url('/assets/dragon-hud-v26.png') center/100% 100% no-repeat;border:0;border-radius:0;box-shadow:none;image-rendering:pixelated}
+.player-hud .portrait,body.minimal-combat .player-hud .portrait{position:absolute;left:14px;top:23px;width:51px;height:53px;border:0;background:none;box-shadow:none;border-radius:50%;overflow:hidden}
+.player-hud .portrait canvas,body.minimal-combat .player-hud .portrait canvas{width:54px;height:54px;image-rendering:pixelated}
+.player-stats{width:100%}.hud-name,body.minimal-combat .hud-name{font-size:20px;line-height:18px;font-style:normal;letter-spacing:1px}.hud-name b{font:inherit;color:#123d73}
+.hud-name #form-label{display:none}.player-hud .health-track,body.minimal-combat .player-hud .health-track{height:10px;margin:5px 0 4px;border:2px solid #1f5078;box-shadow:1px 1px #fff;border-radius:0}
+.player-hud .ki-track,body.minimal-combat .player-hud .ki-track{height:7px;border:1px solid #735118;border-radius:0;background:#b89961}
+#health-fill{background:repeating-linear-gradient(90deg,#70ce41 0 18%,#173e4826 18% 20%)}#ki-fill{background:repeating-linear-gradient(90deg,#ffd639 0 18%,#fff7a7 18% 20%)}
+.player-hud .resource-caption,.player-hud .special-track,.player-hud .portrait>span{display:none}
+body.minimal-combat .player-hud .meter-label{display:flex!important;font:12px 'Seven Pixel',monospace;line-height:12px;color:#30526d;margin-top:3px}
+.arrival-radar{border:3px solid #1d5687;border-radius:0;box-shadow:inset 0 0 0 2px #ffe08a;background:#fff6dc;image-rendering:pixelated;top:124px}
+.arrival-radar header{font:14px 'Seven Pixel',monospace}.arrival-radar small{font:12px 'Seven Pixel',monospace;letter-spacing:0}
+#gameplay-notes{background:#fff7df;border-top:4px solid #dfa02a;box-shadow:inset 0 2px #ffec8d}
+#gameplay-notes .arrival-objective small,#gameplay-notes .arrival-objective>span{font:14px 'Seven Pixel',monospace;letter-spacing:0}
+#gameplay-notes .arrival-objective h2{font:20px 'Seven Pixel',monospace;color:#183e73}
+#gameplay-notes .arrival-objective p,#gameplay-notes #arrival-radio,body.minimal-combat[data-screen=playing] #gameplay-notes .timing-cue:not(:empty){font:17px/1.05 'Seven Pixel',monospace}
+.primary-button,.secondary-button,.map-back,.menu-option{font:20px/1 'Seven Pixel',monospace;border-radius:0;letter-spacing:.5px}
+.primary-button{border:3px solid #fff1a7;outline:2px solid #a96f16;box-shadow:3px 4px 0 #214f80;color:#183d75}
+.map-header h2{font:30px/1 'Seven Pixel',monospace;font-style:normal}.map-node strong{font:19px/1 'Seven Pixel',monospace}.map-node small,.map-node .node-status{font:16px/1 'Seven Pixel',monospace}
+.map-detail h3{font:28px/1 'Seven Pixel',monospace}.map-detail p,.map-enemies span,.map-objective strong{font:18px/1.1 'Seven Pixel',monospace}.map-detail small,.map-detail #map-stage-status,.map-footer{font:16px/1.1 'Seven Pixel',monospace}
+.saga-scene-copy h3{font:30px/1 'Seven Pixel',monospace}.saga-scene-copy strong{font:23px/1 'Seven Pixel',monospace}.saga-scene-copy small,#map-itinerary{font:16px/1 'Seven Pixel',monospace;letter-spacing:0}
+.dialogue-copy h2{font:28px/1 'Seven Pixel',monospace}.dialogue-copy p{font:23px/1.1 'Seven Pixel',monospace}.dialogue-top{font:16px 'Seven Pixel',monospace}
+.intro h1,.intro h1 strong,.intro h1 small,.menu h2{font-family:'Seven Pixel',monospace;letter-spacing:1px}.intro h1 strong{font-weight:400}.intro-subtitle,.intro-description,.menu-card p{font:22px/1.1 'Seven Pixel',monospace}
+.child-segment #touch-controls [data-action]:not([data-action=left]):not([data-action=right]):not([data-action=guard]),.child-segment #touch-powers,.child-segment .ki-track{display:none!important}
+.child-segment #touch-controls [data-action=guard]{display:flex!important;opacity:1}
+@media(max-width:700px){.hud .player-hud,body.minimal-combat .player-hud{width:236px;min-height:84px;padding:17px 20px 16px 69px}.player-hud .portrait,body.minimal-combat .player-hud .portrait{left:12px;top:20px;width:41px;height:44px}.player-hud .portrait canvas,body.minimal-combat .player-hud .portrait canvas{width:44px;height:44px}.hud-name,body.minimal-combat .hud-name{font-size:18px;line-height:16px}.arrival-radar{top:109px;width:104px}#gameplay-notes .arrival-objective h2{font-size:18px}#gameplay-notes .arrival-objective p,#gameplay-notes #arrival-radio{font-size:16px}.map-header h2{font-size:24px}.map-back{font-size:16px}.map-node strong{font-size:17px}.map-detail #map-description{font-size:18px}.dialogue-copy p{font-size:20px}}
+@media(orientation:landscape) and (max-height:500px){.hud .player-hud,body.minimal-combat .player-hud{width:230px;min-height:76px;padding-top:14px;padding-bottom:12px}.arrival-radar{top:100px;width:96px}.saga-scene-copy h3{font-size:23px}#map-itinerary{font-size:14px}.map-detail #map-description{font-size:17px}.dialogue-copy p{font-size:20px}}

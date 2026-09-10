@@ -60,6 +60,7 @@ export function updateArrivalHud(g,root,usingController){
  const m=g.arrival,panel=root.getElementById('arrival-hud');panel.hidden=!m||!['playing','paused'].includes(g.mode);
  root.body.classList.toggle('arrival-mode',!!m);
  if(!m)return;
+ root.querySelector('.arrival-radar header').firstChild.textContent='COSTA LESTE ';
  const t=arrivalTarget(g);root.getElementById('arrival-step').textContent='1.1 / '+String(m.step+1).padStart(2,'0')+' DE 04';
  root.getElementById('arrival-title').textContent=t.title;root.getElementById('arrival-detail').textContent=m.step===1?`${g.rocks.filter(r=>r.broken).length}/2 pedras removidas. ${t.detail}`:t.detail;
  root.getElementById('arrival-note').textContent=m.captionTime>0?m.caption:g.arrival.step===3?'RETORNO À COSTA':'COSTA LESTE · GOKU';

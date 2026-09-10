@@ -1,0 +1,17 @@
+# Artes do episódio 1
+
+Geradas com a ferramenta integrada ImageGen em 10/09/2026. PNGs originais com canal alfa preservado; os sprites são recortados por componentes conectados no carregador do jogo, sem alterar os arquivos originais.
+
+## HUD — dragon-hud-v26.png
+
+Prompt: Use case: stylized-concept. Asset type: production game HUD background PNG. Create a single wide horizontal pixel art HUD frame for a Dragon Ball inspired 2D game with a LIGHT theme. Transparent background outside the frame. Aspect ratio 3:1. The panel itself fills almost all the image, inset 2%. Left 23% contains an EMPTY circular ivory portrait socket with orange-gold pixel border and a small four-star orange Dragon Ball embedded at bottom left. To the right, the remaining 73% is a clean flat warm ivory rectangular panel, entirely blank to receive real HTML health and ki meters. Outer border in cobalt blue and gold, compact angular pixel corners, small yellow Nimbus cloud flourishes at lower edge, tiny green Shenron scale motif along top edge. Crisp deliberate 16-bit pixel art, limited palette, no blur, no soft gradients. Minimal ornament that remains clear when displayed at 280 by 90 pixels. No letters, no words, no numbers, no actual meters, no character portrait, no large dragon covering the blank area. This is an actual game UI asset, not a screenshot or mockup.
+
+## Piccolo — piccolo-v26.png
+
+Prompt: Production 2D game sprite atlas, transparent PNG, square canvas. Exactly 4 columns by 3 rows of equal sized cells, no gridlines or text. Each cell contains one full body Piccolo from Dragon Ball, green Namekian skin, pointed ears and antennae, purple gi with blue sash and brown boots, no cape or turban. Consistent 16-bit pixel art, hard pixels, bright palette, dark outlines, all same body size, facing RIGHT, feet at same relative bottom baseline, generous transparent padding, no overlapping cells. Row 1: idle standing, running, flying horizontally, blocking with forearms. Row 2: straight long reaching punch, high kick, upward launcher punch, airborne downward strike. Row 3: gathering yellow KI with two fingers at forehead (Makankosappo), extending two fingers forward to fire (NO beam painted outside hand), taking damage leaning backward, exhausted kneeling. Use a recognizable Piccolo identity in every frame, combat-ready proportions. This is a runtime sprite sheet not a presentation.
+
+## Gohan — gohan-child-v26.png
+
+Prompt: Production 2D sprite atlas PNG with genuine transparent background. Exactly 3 columns and 2 rows of equal cells on a landscape canvas. Six sprites of very young Gohan from early Dragon Ball Z, a small frightened child, black bowl-cut hair, red cap with four-star Dragon Ball on top, yellow Chinese style tunic with red trim and green trousers, brown shoes and monkey tail. Consistent 16-bit pixel art, bright palette, crisp dark pixel outlines. All sprites full body, facing RIGHT, same size, aligned feet to bottom of each cell with generous margins. Row 1: worried idle standing; cautious small walking step; crouching with hands over head protecting himself. Row 2: stumbling frightened with hands stretched; eyes tightly shut with small involuntary golden aura close to body; sitting tired hugging knees. No martial arts stances, no trained fighting, no weapon, no text, no grid, no background. Runtime game sprite sheet.
+
+Fonte local: [VT323 / Google Fonts](https://github.com/google/fonts/tree/main/ofl/vt323). Licença incluída em `fonts/VT323-OFL.txt`.

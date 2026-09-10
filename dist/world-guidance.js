@@ -3,6 +3,7 @@ import {arrivalTarget} from './arrival-mission.js';
 // Directions describe the next reachable objective, including the return trip.
 export function worldGuidance(g){
   if(g.mode!=='playing'||g.versus)return null;
+  if(g.episode){const t=g.story.objectives[g.episode.step];return {x:t.x,y:t.y,label:t.title};}
   if(g.arrival){const t=arrivalTarget(g);return {x:t.x,y:t.y,label:t.title};}
   if(g.activeEncounter)return null;
   const orb=g.orbs.filter(o=>!o.got).sort((a,b)=>Math.abs(a.x-g.p.x)-Math.abs(b.x-g.p.x))[0];
