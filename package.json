@@ -1,0 +1,14 @@
+{
+  "name": "seven-ki",
+  "version": "16.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node scripts/serve.mjs",
+    "dev": "node scripts/serve.mjs",
+    "test": "node scripts/test.mjs",
+    "check:sprites": "node tests/sprite-atlas-check.mjs"
+  },
+  "engines": { "node": ">=22" },
+  "optionalDependencies": { "@napi-rs/canvas": "0.1.100" }
+}

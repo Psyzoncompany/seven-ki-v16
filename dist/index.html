@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#060d20" /><meta name="apple-mobile-web-app-capable" content="yes" /><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="description" content="Sete esferas. Um caminho. Um jogo de luta e plataforma em pixel art para PC e celular." />
+  <title>SEVEN / KI — Sagas Saiyajin e Freeza</title>
+  <link rel="icon" type="image/png" href="/assets/hud-icons-v4.png" />
+  <link rel="stylesheet" href="/style.css?v=16" />
+  <link rel="stylesheet" href="/versus.css?v=18" />
+  <link rel="stylesheet" href="/arrival.css?v=23" />
+  <script type="module" src="/game.js?v=16"></script>
+</head>
+<body data-screen="intro">
+  <main id="app">
+    <header class="app-header">
+      <a href="/" class="wordmark" aria-label="Seven Ki, início">SEVEN<span>/</span>KI<span class="brand-square">七</span></a>
+      <div class="header-center"><span class="tiny-line"></span> EXPERIMENTO DE COMBATE <span class="version">V.14</span></div>
+      <nav class="tools" aria-label="Opções do jogo">
+        <button id="sound" class="icon-button" title="Ativar ou desativar som" aria-label="Desativar som" aria-pressed="true"><span data-icon="controls"></span></button>
+        <button id="help" class="icon-button" title="Controles" aria-label="Ver controles"><span data-icon="controls"></span></button>
+        <button id="fullscreen" class="icon-button" title="Tela cheia" aria-label="Tela cheia"><span data-icon="expand"></span></button>
+      </nav>
+    </header>
+    <section class="game-shell" aria-label="Jogo Seven Ki">
+      <div id="stage" tabindex="0" aria-label="Área do jogo. Use WASD para mover e voar, E para subir, setas para combater e Q para investigar.">
+        <canvas id="game" aria-label="Vale dos Ecos, jogo de plataforma e combate"></canvas>
+        <div class="vignette" aria-hidden="true"></div>
+        <div class="hud" id="hud">
+          <div class="player-hud">
+            <div class="portrait"><canvas id="portrait" width="100" height="100"></canvas><span>01</span></div>
+            <div class="player-stats"><div class="hud-name"><b id="hero-name">GOKU</b> <span id="form-label">FORMA BASE</span></div><div class="health-track"><div id="health-fill"></div></div><div class="resource-caption">ENERGIA <span>KI</span></div><div class="ki-track"><div id="ki-fill"></div></div><div class="special-track"><div id="special-fill"></div></div><div class="meter-label"><span id="health-text">250 / 250</span><span id="ki-text">KI 60 / 100</span></div></div>
+          </div>
+          <div class="zone-hud"><span id="zone-eyebrow">01 / VALE DOS ECOS</span><div id="zone-name">O CAMINHO COMEÇA</div></div>
+          <div class="orb-hud"><div class="orb-count"><span class="orb-symbol" data-icon="orb"></span><b id="orb-total">0</b><span>/ 7</span></div><div id="orb-slots" aria-label="0 de 7 esferas"></div></div>
+        </div>
+        <button id="pause" class="pause-button" aria-label="Pausar jogo" title="Pausar (Esc)"><span data-icon="pause"></span></button>
+        <div id="boss-hud" class="boss-hud" hidden><div><span id="boss-name">GUARDIÃO DO VALE</span><span id="boss-hp"></span></div><div class="boss-track"><i id="boss-fill"></i></div></div>
+        <div id="arrival-hud" hidden>
+          <section class="arrival-objective" aria-label="Objetivo da missão"><small id="arrival-step"></small><h2 id="arrival-title"></h2><p id="arrival-detail"></p><span id="arrival-note" role="status"></span></section>
+          <section class="arrival-radar" aria-label="Minimapa da costa"><header>COSTA LESTE <span id="arrival-distance"></span></header><canvas id="arrival-minimap" width="200" height="80" aria-label="Sua posição em verde, objetivo em dourado e perigos em coral"></canvas><small>● VOCÊ &nbsp; ◆ OBJETIVO</small></section>
+          <button id="arrival-interact" hidden>INVESTIGAR</button>
+          <p id="arrival-radio" hidden role="status"></p>
+        </div>
+        <div id="toast" class="game-toast" role="status"></div>
+        <div id="round-score" hidden aria-live="polite"></div><div id="finish-title" class="finish-title" role="status" hidden></div>
+        <div id="timing-cue" class="timing-cue" aria-live="off"></div><div id="combo" class="combo" aria-hidden="true"><b id="combo-count">0</b><span>ACERTOS</span><em id="combo-caption">BOM COMEÇO</em></div>
+        <div id="zone-toast" class="zone-toast"><small>SEVEN / KI</small><strong>VALE DOS ECOS</strong><span>Encontre as 7 esferas. Derrote o guardião.</span></div>
+        <div class="world-direction" id="direction">SIGA EM FRENTE <span><span data-icon="right"></span></span></div>
+        <div class="intro overlay" id="intro">
+          <div class="intro-content">
+            <div class="overline"><span></span> SEVEN / KI</div>
+            <h1><small>DRAGON BALL Z</small><strong>SEVEN <span>/ KI</span></strong></h1>
+            <p class="intro-subtitle">DA TERRA A NAMEKUSEI</p>
+
+            <button id="start" class="primary-button" disabled><span id="start-text">PREPARANDO AS FASES…</span><span><span data-icon="right"></span></span></button>
+            <button id="intro-versus" class="secondary-button menu-option" disabled>VERSUS <small>VOCÊ × CPU</small></button>
+            <button id="intro-controls" class="secondary-button menu-option"><span data-icon="controls"></span>CONTROLES E OPÇÕES</button><button id="intro-fullscreen" class="secondary-button menu-option"><span data-icon="expand"></span>TELA CHEIA</button><div class="intro-meta"><span>07 CAPÍTULOS</span><i></i><span>PC · MOBILE · XBOX</span><i></i><span>SAIYAJIN · FREEZA</span></div>
+          </div>
+          <div class="level-stamp"><span>07</span><div>ESFERAS.<br>UMA JORNADA.</div><small>SAGA SAIYAJIN + FREEZA</small></div>
+        </div>
+        <section id="versus-select" class="versus-select overlay" role="dialog" aria-modal="true" aria-labelledby="versus-title" hidden>
+          <header class="versus-header"><div><span class="overline">DUELO LIVRE · VOCÊ × CPU</span><h2 id="versus-title">VERSUS</h2></div><button id="versus-back" class="secondary-button">VOLTAR AO MENU</button></header>
+          <p class="versus-lead">Todos os lutadores liberados. Escolha os dois lados e vença por nocaute.</p>
+          <div class="versus-fighters">
+            <article class="versus-fighter player"><label for="versus-player">01 · SEU PERSONAGEM</label><canvas id="versus-player-art" width="360" height="230" aria-hidden="true"></canvas><select id="versus-player"></select><p id="versus-player-style"></p><small id="versus-player-special"></small></article>
+            <b class="versus-mark" aria-hidden="true">VS</b>
+            <article class="versus-fighter cpu"><label for="versus-cpu">02 · ADVERSÁRIO CPU</label><canvas id="versus-cpu-art" width="360" height="230" aria-hidden="true"></canvas><select id="versus-cpu"></select><p id="versus-cpu-style"></p><small id="versus-cpu-special"></small></article>
+          </div>
+          <footer class="versus-footer"><label for="versus-arena">ARENA <select id="versus-arena"><option value="valley">Vale da Terra</option><option value="namek">Namekusei</option></select></label><div class="versus-actions"><button id="versus-swap" class="secondary-button">INVERTER</button><button id="versus-random" class="secondary-button">SORTEAR</button><button id="versus-play" class="primary-button">COMEÇAR COMBATE</button></div><p>Melhor de três rounds · 300 de vida por lutador · Mesmos personagens permitidos · Sem alterar o progresso das sagas</p></footer>
+        </section>
+        <section id="world-map" class="world-map overlay" aria-label="Mapa de fases" hidden>
+ <header class="map-header"><div><span class="map-eyebrow">LENDAS DAS 7 ESFERAS</span><h2 id="map-heading">SAGA SAIYAJIN</h2></div><div class="map-tools"><button id="map-skills" class="map-back">HABILIDADES</button><button id="map-saga" class="map-back">SAGA FREEZA</button><button id="map-mode" class="map-back">TREINO ORIGINAL</button><button id="map-back" class="map-back">VOLTAR AO MENU</button></div></header>
+ <div class="map-body"><div class="map-landscape"><div class="map-route" aria-hidden="true"></div><div id="map-nodes" class="map-nodes" role="group" aria-label="Regiões da jornada"></div></div>
+ <aside class="map-detail" aria-labelledby="map-title"><span id="map-number" class="map-eyebrow">FASE 01</span><h3 id="map-title">Vale dos Ecos</h3><div id="map-preview" class="map-preview" aria-hidden="true"></div><p id="map-description"></p><div class="map-objective"><span data-icon="orb"></span><div><small>OBJETIVO</small><strong id="map-goal">7 esferas + chefe</strong></div></div><div class="map-enemies"><small>INIMIGOS</small><span id="map-enemies"></span></div><p id="map-stage-status" role="status"></p><button id="map-play" class="primary-button"><span data-icon="right"></span><span id="map-play-label">INICIAR FASE</span></button></aside></div>
+ <footer class="map-footer"><div><small>ESFERAS</small><strong id="map-orbs">0 / 7</strong></div><div><small>FASES CONCLUÍDAS</small><strong id="map-completed">0 / 7</strong></div><div><small>MELHOR COMBO</small><strong id="map-best-combo">—</strong></div><span id="map-save-note">Progresso salvo neste dispositivo.</span></footer>
+ </section>
+<div id="menu" class="menu overlay" hidden>
+          <div class="menu-card"><div class="overline" id="menu-eyebrow">RESPIRE. DEPOIS, CONTINUE.</div><h2 id="menu-title">PAUSADO</h2><p id="menu-description"></p><div id="result-stats"></div><button id="resume" class="primary-button">CONTINUAR <span><span data-icon="right"></span></span></button><button id="victory-map" class="primary-button" hidden>VER MAPA DE FASES</button><button id="restart" class="secondary-button">RECOMEÇAR A FASE</button><button id="menu-fullscreen" class="secondary-button">TELA CHEIA</button><button id="menu-home" class="text-button">MENU PRINCIPAL</button><button id="menu-skills" class="text-button">HABILIDADES DO GOKU</button><button id="menu-controls" class="text-button">VER CONTROLES</button></div>
+        </div>
+        <div id="controls-modal" class="menu overlay" hidden>
+          <div class="controls-card"><button id="close-controls" class="close-button" aria-label="Fechar controles"><span data-icon="close"></span></button><div class="overline">DOMINE SEU KI</div><h2>SEUS MOVIMENTOS</h2>
+            <div class="guide-tabs"><button id="guide-keyboard" aria-pressed="true">TECLADO / TOQUE</button><button id="guide-xbox" aria-pressed="false">CONTROLE XBOX</button></div><p id="controller-status" role="status">Conecte o Xbox por Bluetooth ou USB e pressione um botão.</p><p><strong>Combate inspirado em Tenkaichi 3, adaptado ao 2D.</strong> Xbox: X = □, Y = △, B = ○ e A = × do PlayStation. X encadeia golpes; Y dispara KI fora do combo; B defende; A avança e persegue.</p><p><strong>Saga Saiyajin e Versus:</strong> X → Y aplica um golpe curto de pressão e mantém o alvo perto. X → X → Y afasta com um chute. Durante o combo, cima + Y lança por 14 KI; baixo + Y no ar derruba. Cima + X e baixo + X no ar continuam disponíveis. A persegue por 15 KI; LT + Y usa o especial. No teclado/toque, use GOLPE e RAJADA nas mesmas sequências, ou ELEVAR / QUEDA.</p><p><strong>Defesa:</strong> B / → bloqueia imediatamente na Saga Saiyajin e no Versus. Pressione pouco antes do impacto para aparar; o aviso abre 0,45 s para responder com X / GOLPE. B + A (DEFESA + ESQUIVA) dá um passo curto por 16 de fôlego, com recarga de 0,42 s. B + direção tenta o teleporte nos últimos 140 ms antes do ataque, por 20 KI. Durante o dano, solte e pressione DEFESA novamente ou use ESQUIVA para recuperar por 25 KI, com recarga de 2 s. No ar, PULO também recupera; GOLPE contra-ataca por 30 KI.</p><div id="keyboard-guide"><div class="controls-grid"><span><kbd>W A S D</kbd><b>Mover / iniciar voo</b></span><span><kbd>←</kbd><b>X: golpes / contra-ataque</b></span><span><kbd>↑</kbd><b>Y: KI / finalizar combo</b></span><span><kbd>→</kbd><b>B: defender / aparar</b></span><span><kbd>↓</kbd><b>A: avançar / perseguir</b></span><span><kbd>Q</kbd><b>LB: selecionar alvo</b></span><span><kbd>E</kbd><b>RB: pular / subir</b></span><span><kbd>CTRL</kbd><b>LT: carregar KI</b></span><span><kbd>ESPAÇO</kbd><b>RT: descer</b></span><span><kbd>CTRL + ↑</kbd><b>Especial</b></span><span><kbd>CTRL + ↓</kbd><b>Dragon Dash</b></span><span><kbd>→ + ↓</kbd><b>Esquiva curta</b></span><span><kbd>W + ←</kbd><b>Lançar</b></span><span><kbd>S + ←</kbd><b>Derrubar no ar</b></span><span><kbd>T / CTRL + →</kbd><b>Transformar</b></span><span><kbd>TAB / ESC</kbd><b>Zoom / pausa</b></span></div><p><strong>Combos:</strong> ← depois ↑ pressiona; ←, ←, ↑ afasta. Durante o combo, W + ↑ lança e S + ↑ no ar derruba. Ctrl + Espaço + ↑ usa o supremo desbloqueado. W e S controlam a altura durante o voo; solte para pairar. Espaço desce; E pula e sobe.</p><p><strong>No toque:</strong> GOLPE encadeia, RAJADA escolhe o final, ELEVAR / QUEDA controla o combo aéreo. DEFESA + ESQUIVA faz a esquiva curta.</p></div><div id="xbox-guide" hidden><div class="controls-grid"><span><kbd>ANALÓGICO</kbd><b>Mover / voo livre em 2D</b></span><span><kbd>X</kbd><b>Golpes / contra-ataque</b></span><span><kbd>Y</kbd><b>Rajadas de KI</b></span><span><kbd>B</kbd><b>Defender / aparar</b></span><span><kbd>A</kbd><b>Avançar / perseguir</b></span><span><kbd>B + A</kbd><b>Esquiva curta</b></span><span><kbd>LT</kbd><b>Segurar para carregar KI</b></span><span><kbd>LT + A</kbd><b>Dragon Dash até o inimigo</b></span><span><kbd>LT + Y</kbd><b>Kamehameha</b></span><span><kbd>LT + ↓ + Y</kbd><b>Genki Dama desbloqueada · 80 KI</b></span><span><kbd>RB</kbd><b>Pular / subir</b></span><span><kbd>RT</kbd><b>Descer</b></span><span><kbd>LB</kbd><b>Selecionar alvo</b></span><span><kbd>R3 / LT + B</kbd><b>Transformação desbloqueada</b></span><span><kbd>VIEW</kbd><b>Alternar zoom</b></span><span><kbd>MENU</kbd><b>Pausar</b></span></div><p>Baseado nas posições do controle PS2 de Tenkaichi 3, adaptado ao plano 2D. X + cima lança, A persegue, X continua e X + baixo finaliza. Solte LT para atacar ou mantenha LT e pressione X para interromper a carga com um golpe.</p><p>B + direção tenta um teleporte com custo de KI e recarga. A confirma e B volta nos menus. O voo mantém a altura com o analógico em repouso.</p></div>
+            <button id="layout-button" class="secondary-button">AJUSTAR BOTÕES MOBILE</button><button id="controls-done" class="primary-button">ENTENDI <span><span data-icon="right"></span></span></button>
+          </div>
+        </div>
+        <section id="dialogue-panel" class="dialogue-panel" role="dialog" aria-modal="true" aria-labelledby="dialogue-speaker" hidden>
+          <canvas id="dialogue-portrait" width="180" height="180" aria-hidden="true"></canvas>
+          <div class="dialogue-copy"><div class="dialogue-top"><span id="dialogue-chapter"></span><span id="dialogue-count"></span></div><h2 id="dialogue-speaker"></h2><p id="dialogue-text"></p><div class="dialogue-actions"><button id="dialogue-skip" class="text-button">PULAR CENA</button><button id="dialogue-next" class="primary-button">CONTINUAR <small>A / ENTER</small></button></div></div>
+        </section>
+        <section id="skills-modal" class="skills-modal overlay" role="dialog" aria-modal="true" aria-labelledby="skills-title" hidden>
+          <div class="skills-card"><header><div><span class="overline">TREINAMENTO DO GOKU</span><h2 id="skills-title">SUPERE SEUS LIMITES</h2></div><button id="skills-close" class="secondary-button">VOLTAR</button></header>
+            <div class="skills-summary"><span><strong id="skill-points">3</strong> PONTOS DISPONÍVEIS</span><span>+4 ao concluir cada capítulo pela primeira vez.</span></div>
+            <div class="skill-branches"><span>CORPO</span><span>ENERGIA</span><span>KAIOKEN</span></div><div id="skill-tree" class="skill-tree"></div>
+            <div class="skill-detail"><div><h3 id="skill-name"></h3><p id="skill-description"></p><small id="skill-requirements"></small></div><button id="skill-buy" class="primary-button">APRENDER</button></div>
+            <div class="form-picker"><span>FORMA EQUIPADA</span><button data-form="2">KAIOKEN ×2</button><button data-form="3">×3</button><button data-form="4">×4</button></div><p id="skill-feedback" role="status">Habilidades aplicadas ao iniciar ou reiniciar um capítulo.</p>
+          </div>
+        </section>
+      </div>
+      <div id="touch-controls" hidden class="touch-controls" aria-label="Controles de toque">
+        <button id="touch-powers" class="touch-toolbar" aria-expanded="false">+ PODERES</button>
+
+        <button data-action="left" aria-label="Mover para esquerda"><span data-icon="left"></span></button><button data-action="right" aria-label="Mover para direita"><span data-icon="right"></span></button>
+        <button data-action="attack" class="main-attack" aria-label="Atacar"><span data-icon="fist"></span><small>GOLPE</small></button>
+        <button data-action="jump" class="main-jump" aria-label="Pulo duplo"><span data-icon="up"></span><small>PULO</small></button>
+        <button data-action="dash" class="main-dash" aria-label="Esquivar"><span data-icon="dash"></span><small id="dash-name">ESQUIVA</small></button>
+        <button data-action="technique" class="main-technique" aria-label="Lançar inimigo ou finalizar no chão"><span data-icon="launch"></span><small id="technique-name">ELEVAR</small></button>
+        <button data-action="charge" class="power-control" aria-label="Segurar para carregar KI"><span data-icon="charge"></span><small>CARGA</small></button>
+        <button data-action="guard" class="power-control" aria-label="Defender e aparar"><span data-icon="shield"></span><small>DEFESA</small></button>
+        <button data-action="blast" class="power-control" aria-label="Rajada de energia"><span data-icon="blast"></span><small>RAJADA</small></button>
+        <button data-action="special" class="power-control" aria-label="Especial"><span data-icon="star"></span><small id="special-name">ESPECIAL</small></button>
+        <button data-action="transform" class="power-control" id="touch-transform" aria-label="Transformar"><span data-icon="sun"></span><small>FORMA</small></button>
+      </div>
+      <footer class="game-footer"><div class="path-indicator"><span>INÍCIO</span><div><i id="progress-fill"></i><b id="progress-dot"></b></div><span>CHEFE</span></div><span id="objective">REÚNA AS 7 ESFERAS</span><span class="session-timer" id="timer">00:00</span></footer>
+    </section>
+    <div id="layout-modal" class="layout-modal" role="dialog" aria-modal="true" aria-labelledby="layout-title" hidden>
+      <div class="layout-card"><div class="overline">DO SEU JEITO</div><h2 id="layout-title">AJUSTE OS BOTÕES</h2><p>Arraste os botões. Cada orientação tem sua própria disposição.</p>
+        <div class="layout-options"><label>Orientação <select id="layout-mode"><option value="portrait">Vertical</option><option value="landscape">Horizontal</option></select></label><label>Tamanho <output id="layout-size-value">100%</output><input id="layout-size" type="range" min="80" max="130" value="100" /></label><label>Opacidade <output id="layout-opacity-value">86%</output><input id="layout-opacity" type="range" min="40" max="100" value="86" /></label></div>
+        <div id="layout-preview" class="layout-preview" aria-label="Prévia: arraste os botões"></div>
+        <div class="layout-actions"><button id="layout-reset" class="secondary-button">PADRÃO</button><button id="layout-mirror" class="secondary-button">ESPELHAR</button><button id="layout-cancel" class="secondary-button">CANCELAR</button><button id="layout-save" class="primary-button">SALVAR</button></div>
+        <p id="layout-status" role="status">As preferências ficam somente neste dispositivo.</p>
+      </div>
+    </div>
+    <section class="keybar" aria-label="Atalhos de controle"><span class="controller-hints"><kbd>X</kbd> GOLPE · <kbd>Y</kbd> KI · <kbd>B</kbd> DEFESA · <kbd>A</kbd> AVANÇAR</span><span><kbd>WASD</kbd> MOVER / VOAR</span><span><kbd>←</kbd> GOLPE</span><span><kbd>↑</kbd> KI</span><span><kbd>→</kbd> DEFESA</span><span><kbd>↓</kbd> AVANÇAR</span><span><kbd>E</kbd> SUBIR</span><span><kbd>ESPAÇO</kbd> DESCER</span><button id="more-controls">TODOS OS CONTROLES <span data-icon="right"></span></button></section>
+    <footer class="page-footer"><span>FEITO PARA SENTIR CADA GOLPE.</span><span>SAGA SAIYAJIN <i>/</i> VALE DOS ECOS</span></footer>
+  </main>
+</body>
+</html>

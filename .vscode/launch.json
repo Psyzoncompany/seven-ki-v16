@@ -1,0 +1,11 @@
+{
+  "version": "0.2.0",
+  "configurations": [{
+    "name": "Jogar e depurar SEVEN KI (Chrome)",
+    "type": "pwa-chrome",
+    "request": "launch",
+    "url": "http://localhost:4173",
+    "webRoot": "${workspaceFolder}/dist",
+    "preLaunchTask": "Iniciar SEVEN KI"
+  }]
+}

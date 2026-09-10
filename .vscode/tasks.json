@@ -1,0 +1,11 @@
+{
+  "version": "2.0.0",
+  "tasks": [{
+    "label": "Iniciar SEVEN KI",
+    "type": "process",
+    "command": "node",
+    "args": ["scripts/serve.mjs"],
+    "isBackground": true,
+    "problemMatcher": { "owner": "sevenki", "pattern": { "regexp": "^(ERROR) (.*)$", "message": 2 }, "background": { "activeOnStart": true, "beginsPattern": ".*", "endsPattern": "SEVEN / KI pronto:" } }
+  }]
+}

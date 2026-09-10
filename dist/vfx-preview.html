@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SEVEN / KI — Animações</title>
+<style>body{margin:0;background:#091321;color:#e6edf5;font:16px system-ui;padding:24px}main{max-width:1100px;margin:auto}h1{font-size:26px}p{color:#a5b6ca}canvas{width:100%;border:1px solid #304358;border-radius:14px}button,a{background:#233d54;color:white;padding:10px 16px;border:0;border-radius:8px;cursor:pointer;margin-right:8px}a{display:inline-block;text-decoration:none}label{display:inline-block;margin:15px 0}input{width:240px}</style>
+<main><h1>Pedras, impactos e energia</h1><p>Expansão, fragmentos e dissipação. Ciclo de 3,5 segundos para comparar os efeitos.</p><button id="pause">Pausar</button><a href="/">Voltar ao jogo</a><label>Tempo <input id="time" type="range" min="0" max="3.5" step="0.01" value="0"></label><canvas id="preview" width="1100" height="680"></canvas></main>
+<script type="module">
+import {drawCombatEffect} from './combat-effects.js';
+import {gridAtlas} from './impact-feedback.js';
+import {drawWorldEffect,drawWorldHazard,effectDuration} from './world-animation.js';
+const image=new Image();image.src='/assets/combat-world-v21.png';await image.decode();
+const atlas=gridAtlas(image),c=document.querySelector('canvas').getContext('2d'),slider=document.querySelector('input'),button=document.querySelector('button');
+let t=0,last=performance.now(),paused=false;
+button.onclick=()=>{paused=!paused;button.textContent=paused?'Reproduzir':'Pausar';};
+slider.oninput=()=>{t=Number(slider.value);paused=true;button.textContent='Reproduzir';};
+function draw(frame,x,y,w,h,alpha=1){c.save();c.globalAlpha=Math.max(0,Math.min(1,alpha));c.drawImage(atlas.image,...atlas.frames[frame].rect,x-w/2,y-h/2,w,h);c.restore();}
+const examples=[['Pedra · 1,35 s','rock',2],['Impacto · 0,30 s','impact',8],['Golpe forte · 0,42 s','heavy',9],['Aparo · 0,48 s','parry',11],['Quebra de guarda · 0,52 s','break',12],['Energia · 1,2 s','nova',15],['Poeira · 1,05 s','dust',14],['Feixe · 1,05 s','beam',15]];
+function render(now){if(!paused)t=(t+Math.min((now-last)/1000,.05))%3.5;last=now;slider.value=t;
+ c.fillStyle='#101f30';c.fillRect(0,0,1100,680);
+ examples.forEach(([label,profile,frame],i)=>{const x=137+(i%4)*275,y=110+Math.floor(i/4)*220;c.fillStyle='#dce8f8';c.font='16px system-ui';c.textAlign='center';c.fillText(label,x,y-75);const max=effectDuration[profile];if(t<max){c.save();if(profile==='beam'){c.translate(x-100,y);c.rotate(Math.PI/2);c.scale(.4,.4);drawCombatEffect(c,{profile,frame,size:110,life:max-t,max},0,0)||drawWorldEffect(draw,{profile,frame,size:110,life:max-t,max},0,0);}else {c.translate(x,y);if(profile==='nova')c.scale(.55,.55);drawCombatEffect(c,{profile,frame,size:110,life:max-t,max},0,0)||drawWorldEffect(draw,{profile,frame,size:110,life:max-t,max},0,0);}c.restore();}});
+ ['spikes','lava','acid','geyser','rocks'].forEach((type,i)=>{const x=110+i*220;c.fillStyle='#819ab0';c.fillRect(x-80,618,160,2);const state=drawWorldHazard(draw,{type,x:0,w:105,period:3.5},t,x,615);c.fillStyle='#dce8f8';c.fillText(({spikes:'Espinhos',lava:'Lava',acid:'Ácido',geyser:'Gêiser',rocks:'Pedras'})[type]+' · '+({warning:'aviso',active:'ativo',idle:'repouso'})[state.state],x,655);});requestAnimationFrame(render);
+}requestAnimationFrame(render);
+</script></html>
