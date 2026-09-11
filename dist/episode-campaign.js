@@ -1,3 +1,4 @@
+import {RADITZ_MISSION} from './raditz-data.js';
 import {ARRIVAL,readArrival} from './arrival-mission.js';
 import {readSaga} from './saga.js';
 
@@ -11,7 +12,7 @@ export const EPISODES=[
   platforms:[{x:490,y:380,w:210,h:82},{x:1400,y:360,w:180,h:95},{x:1710,y:320,w:230,h:120},{x:2240,y:378,w:210,h:84}],hazards:[{x:1240,w:100,type:'rocks',period:4.4,offset:1}],
   objectives:[step(1090,462,'goku','Abra uma aproximação segura','Afaste as criaturas antes de se aproximar da cápsula de Raditz.',[180,462],{fight:0}),step(1900,320,'piccolo','Prepare o ponto de apoio','Alcance o mirante para observar a cápsula e encontrar uma aproximação segura.',[1380,462]),step(2850,462,'gohan','Gohan: procure abrigo','A / D ou analógico para mover. Fique na área azul e segure → / B para se proteger dos tremores.',[2660,462],{captive:true}),step(3220,462,'goku','Prepare a intervenção','Goku sentiu a energia de Gohan. Encontre Piccolo diante do local do confronto.',[2990,462])]},
 ];
-export const NEXT_BATTLE={...common,id:1201,number:'2.1',available:false,name:'Raditz · batalha em equipe',bossName:'RADITZ',biome:'EPISÓDIO 2 · EM BREVE',pos:[88,36],crop:[88,36],detail:'Próxima parte do plano: batalha em equipe, intervenção de Gohan e cena final.',enemy:'Goku · Piccolo · Gohan · Raditz',zones:[]};
+export const NEXT_BATTLE=RADITZ_MISSION;
 export const CAMPAIGN_STAGES=[ARRIVAL,...EPISODES,NEXT_BATTLE];
 export const episodeById=id=>EPISODES.find(m=>m.id===id);
 const KEY='sevenki-episode-one-v1';

@@ -10,7 +10,7 @@ const places={
 };
 
 export function renderSagaScene(root,level,atlases){
-  const scene=root.getElementById('saga-scene'),place=level.id===1102?[level.location,'valley',38,'Piccolo · aliança com Goku']:level.id===1103?[level.location,'valley',75,'Goku · Piccolo · Gohan']:level.id===1201?['Terra · Local do confronto','valley',90,'Raditz · em breve']:places[level.id];
+  const scene=root.getElementById('saga-scene'),place=level.id===1102?[level.location,'valley',38,'Piccolo · aliança com Goku']:level.id===1103?[level.location,'valley',75,'Goku · Piccolo · Gohan']:level.id===1201?['Terra · Local do confronto','valley',90,'Raditz · batalha em equipe']:places[level.id];
   scene.hidden=!place;if(!place)return;
   const [location,asset,position,opponent]=place;
   scene.style.backgroundImage=`linear-gradient(90deg,#e6f6ffdd,transparent 75%),url('/assets/${asset}.png')`;

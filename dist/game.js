@@ -2,7 +2,10 @@ import {ARRIVAL,ARRIVAL_ID,readArrival,saveArrival} from './arrival-mission.js';
 import {drawWorldGuidance,worldGuidance} from './world-guidance.js';
 import {renderSagaScene} from './saga-map-view.js';
 import {CampaignEngine} from './episode-engine.js';
-import {JourneyEngine,JOURNEY,readJourney,saveJourney,finishJourney} from './journey.js';
+import {RaditzCampaignEngine as JourneyEngine} from './raditz-battle.js';
+import {readRaditz,checkpointRaditz,finishRaditz} from './raditz-data.js';
+import {buildRaditzAtlas,mountRaditzUi,updateRaditzHud,drawRaditzWorld,drawRaditzScene,drawGohanRush} from './raditz-view.js';
+import {JOURNEY,readJourney,saveJourney,finishJourney} from './journey.js';
 import {CAMPAIGN_STAGES,episodeById,campaignUnlocked,readEpisodes,saveEpisodeCheckpoint,completeEpisode,EPISODE_ACTORS,episodePose} from './episode-campaign.js';
 import {drawEpisodeWorld,updateEpisodeHud} from './episode-view.js';
 import {drawArrivalBackground,drawArrivalTerrain,drawArrivalWorld,updateArrivalHud} from './arrival-view.js';
@@ -36,6 +39,7 @@ import {TouchLayout} from './touch-layout.js?v=8';
 import {ParticlePool} from './vfx-pool.js?v=9';
 
 const $=id=>document.getElementById(id);
+mountRaditzUi(()=>engine,()=>clearInput());
 const stage=$('stage'),canvas=$('game'),ctx=canvas.getContext('2d',{alpha:false});
 let engine=new JourneyEngine();const sound=new GameAudio(),controller=new XboxInput();engine.reset(1101);
 let controllerConnected=false,padMenuDirection='',padMenuNext=0,controllerNotice='';
@@ -51,8 +55,8 @@ let campaign=readProgress(),saga=readSaga(),campaignMode='story',storySaga='saiy
 const storyStages=()=>campaignMode==='legacy'?(storySaga==='freeza'?FREEZA_CHAPTERS:SAIYAN_CHAPTERS):[JOURNEY,CAMPAIGN_STAGES.at(-1)];
 const mapStages=()=>storyStages();
 const getStage=id=>storyStages().find(s=>s.id===id);
-const unlocked=id=>campaignMode==='legacy'?CHAPTERS.some(c=>c.id===id&&c.available):id===1101;
-const recordFor=id=>campaignMode==='legacy'?sagaRecord(saga,id):({... (id===1101?readJourney():{completed:false,checkpoint:0,bestTime:null}),bestCombo:0,orbs:0});
+const unlocked=id=>campaignMode==='legacy'?CHAPTERS.some(c=>c.id===id&&c.available):id===1101||id===1201&&readJourney().completed;
+const recordFor=id=>campaignMode==='legacy'?sagaRecord(saga,id):({... (id===1101?readJourney():readRaditz()),bestCombo:0,orbs:0});
 const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const touch=matchMedia('(pointer: coarse)').matches||('ontouchstart' in window&&navigator.maxTouchPoints>0);
 const enemyRects=[
@@ -73,8 +77,9 @@ for(let i=0;i<7;i++){const o=document.createElement('i');$('orb-slots').append(o
 
 async function loadAssets(){
   try{
-    await Promise.all(['valley','enemies','kai-motion-v2','kai-solar-v2','enemy-defense-v2','forest-v6','saiyans-v6','goku-v8','kaioken-v8','saga-enemies-v8','portraits-v8','namek-map-v13','namek-stage-v13','namek-villains-v13','saiyan-bosses-v21','freeza-v20','combat-world-v21','combo-roster-v22','arrival-coast-v23','arrival-props-v23','coastal-creatures-v23','arrival-rocks-v24','piccolo-v26','gohan-child-v26','village-boy-v27'].map(name=>new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>{images[name]=img;resolve();};img.onerror=()=>reject(new Error(name));img.src=`/assets/${name}.png`;})));
+    await Promise.all(['valley','enemies','kai-motion-v2','kai-solar-v2','enemy-defense-v2','forest-v6','saiyans-v6','goku-v8','kaioken-v8','saga-enemies-v8','portraits-v8','namek-map-v13','namek-stage-v13','namek-villains-v13','saiyan-bosses-v21','freeza-v20','combat-world-v21','combo-roster-v22','arrival-coast-v23','arrival-props-v23','coastal-creatures-v23','arrival-rocks-v24','piccolo-v26','gohan-child-v26','village-boy-v27','raditz-finale-v28'].map(name=>new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>{images[name]=img;resolve();};img.onerror=()=>reject(new Error(name));img.src=`/assets/${name}.png`;})));
     atlases.base=buildAtlas(images['kai-motion-v2'],6,5);atlases.solar=buildAtlas(images['kai-solar-v2'],6,5);atlases.defense=buildAtlas(images['enemy-defense-v2'],6,3);atlases.saiyans=buildAtlas(images['saiyans-v6'],6,3);
+    atlases.raditzFinale=buildRaditzAtlas(images['raditz-finale-v28']);
     atlases.comboRoster=buildAtlas(images['combo-roster-v22'],6,4);
     for(let row=0;row<4;row++){const height=row===0?105:125,base=atlases.comboRoster.frames[row*6+2].rect[3];for(let i=0;i<6;i++)atlases.comboRoster.frames[row*6+i].scale=height/base;}
     atlases.coastalCreatures=buildAtlas(images['coastal-creatures-v23'],6,2);
@@ -213,6 +218,7 @@ window.addEventListener('keydown',e=>{
     if(e.code==='Tab'){const items=[...$('versus-select').querySelectorAll('button,select')],first=items[0],last=items.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}
     return;
   }
+  if(engine.battle?.scene){if(['Escape','Enter','Space'].includes(e.code)){e.preventDefault();if(!e.repeat){if(e.code==='Escape')engine.finishBattleScene();else engine.battle.scenePaused?engine.resume():engine.pause();clearInput();}}return;}
   if(engine.dialogue){if(['Enter','ArrowDown','ArrowLeft','Escape'].includes(e.code)){e.preventDefault();if(!e.repeat){engine.advanceDialogue(e.code==='Escape');clearInput();}}return;}
   if(!$('skills-modal').hidden){if(e.code==='Escape'){e.preventDefault();closeSkills();}return;}
   if(e.target instanceof HTMLInputElement||e.target instanceof HTMLSelectElement)return;
@@ -235,10 +241,12 @@ for(const button of document.querySelectorAll('[data-action]')){
 }
 window.addEventListener('blur',()=>{clearInput();if(engine.mode==='playing'){engine.pause();showMenu('paused');}});
 document.addEventListener('visibilitychange',()=>{if(document.hidden){clearInput();if(engine.mode==='playing'){engine.pause();showMenu('paused');}}last=0;accumulator=0;});
-function togglePause(){if(engine.dialogue||!$('skills-modal').hidden)return;if(!$('versus-select').hidden||!$('world-map').hidden||!$('intro').hidden||touchLayout?.editing)return;if(engine.mode==='playing'){engine.pause();clearInput();showMenu('paused');}else if(engine.mode==='paused'&&$('controls-modal').hidden){engine.resume();$('menu').hidden=true;}}
+function togglePause(){if(engine.battle?.scene){engine.battle.scenePaused?engine.resume():engine.pause();return;}if(engine.dialogue||!$('skills-modal').hidden)return;if(!$('versus-select').hidden||!$('world-map').hidden||!$('intro').hidden||touchLayout?.editing)return;if(engine.mode==='playing'){engine.pause();clearInput();showMenu('paused');}else if(engine.mode==='paused'&&$('controls-modal').hidden){engine.resume();$('menu').hidden=true;}}
 function openControls(){if(engine.dialogue||!$('skills-modal').hidden)return;setControlGuide(controllerConnected?'xbox':'keyboard');helpWasPlaying=engine.mode==='playing';if(helpWasPlaying)engine.pause();clearInput();$('controls-modal').hidden=false;}
 function closeControls(){$('controls-modal').hidden=true;if(helpWasPlaying){engine.resume();$('menu').hidden=true;}helpWasPlaying=false;clearInput();}
 function showMenu(mode){
+  if(engine.battle){$('menu').hidden=false;$('resume').hidden=mode!=='paused';$('victory-map').hidden=mode!=='won';$('menu-skills').hidden=true;$('menu-versus').hidden=true;$('menu-controls').hidden=mode==='won';$('menu-eyebrow').textContent='ÉPISÓDIO 2 · RADITZ';$('menu-title').textContent=mode==='won'?'O SACRIFÍCIO DE GOKU':mode==='dead'?'TENTE ESTA ETAPA NOVAMENTE':'PAUSADO';$('menu-description').textContent=mode==='won'?'Gohan está salvo. Goku e Raditz morreram. Dois Saiyajins chegarão em um ano. Próximo episódio: o Outro Mundo.':'Retome a luta a partir da última troca de personagem.';$('restart').textContent=mode==='won'?'JOGAR NOVAMENTE':'RETOMAR CHECKPOINT';$('result-stats').textContent=mode==='won'?formatTime(engine.time)+' · Outro Mundo preparado':'ETAPA '+(engine.battle.step+1)+' DE 4';return;}
+
   if(engine.journey){$('menu').hidden=false;$('resume').hidden=mode!=='paused';$('victory-map').hidden=mode!=='won';$('menu-skills').hidden=true;$('menu-versus').hidden=true;$('menu-controls').hidden=mode==='won';$('menu-eyebrow').textContent='EPISÓDIO 1 · A CHEGADA DE RADITZ';$('menu-title').textContent=mode==='won'?'MISSÃO CONCLUÍDA':mode==='dead'?'RETOMAR CHECKPOINT':'PAUSADO';$('menu-description').textContent=mode==='won'?'A jornada até Raditz está concluída. A batalha em equipe será a próxima missão.':'Continue do último checkpoint da jornada.';$('restart').textContent=mode==='won'?'JOGAR NOVAMENTE':'RETOMAR CHECKPOINT';$('result-stats').textContent=mode==='won'?formatTime(engine.time)+' · Costa, montanhas e resgate':'';return;}
   if(engine.episode){$('menu').hidden=false;$('resume').hidden=mode!=='paused';$('victory-map').hidden=mode!=='won';$('menu-skills').hidden=true;$('menu-versus').hidden=true;$('menu-controls').hidden=mode==='won';$('menu-eyebrow').textContent=engine.story.biome;$('menu-title').textContent=mode==='won'?'FASE CONCLUÍDA':mode==='dead'?'RETOMAR CHECKPOINT':'PAUSADO';$('menu-description').textContent=mode==='won'?(engine.stageId===1102?'A fase 1.3 — O resgate de Gohan está disponível no mapa.':'A aproximação está pronta. A batalha com Raditz será a fase 2.1, em desenvolvimento.'):'Continue a partir do último objetivo salvo.';$('restart').textContent=mode==='won'?'JOGAR NOVAMENTE':'RETOMAR CHECKPOINT';$('result-stats').textContent=mode==='won'?formatTime(engine.time)+' · '+engine.story.objectives.length+' objetivos concluídos':'';return;}
 
@@ -272,7 +280,7 @@ function hudUpdate(){
   if(engine.journey)$('arrival-step').textContent='EPISÓDIO 1 / '+String(Math.min(12,Math.round(engine.progress*12)+1)).padStart(2,'0')+' DE 12';
   const p=engine.p;const specialCost=engine.story?(engine.skills.has('kame')?32:40):p.form?28:40;$('special-fill').style.width=Math.min(100,p.ki/specialCost*100)+'%';$('special-fill').parentElement.classList.toggle('ready',p.ki>=specialCost);$('health-fill').style.width=100*p.hp/engine.maxHp+'%';$('ki-fill').style.width=p.ki+'%';
   $('health-text').textContent=`${Math.ceil(p.hp)} / ${engine.maxHp}`;$('ki-text').textContent=p.form?`KI ${Math.floor(p.ki)} · ${Math.ceil(p.formTime)}s`:`KI ${Math.floor(p.ki)} / 100`;
-  $('hero-name').textContent=engine.episode?EPISODE_ACTORS[p.character].name:engine.versus?engine.versus.player.name.toUpperCase():engine.story?'GOKU':'KAI';
+  $('hero-name').textContent=engine.episode||engine.battle?EPISODE_ACTORS[p.character].name:engine.versus?engine.versus.player.name.toUpperCase():engine.story?'GOKU':'KAI';
   $('form-label').textContent=engine.story?(p.form?`KAIOKEN ×${engine.kaiokenLevel} · DESGASTE ${Math.round(p.formFatigue)}%`:p.formCooldown>0?`RECUPERANDO ${Math.ceil(p.formCooldown)}s`:engine.story.chapter===1?'FORMA BASE':p.ki>=60?'KAIOKEN '+(controllerConnected?'[R3]':'[T]'):'FORMA BASE'):p.form?'ASCENSÃO SOLAR':p.ki>=100?(controllerConnected?'DESPERTAR [R3]':'DESPERTAR [T]'):'FORMA BASE';
   $('orb-total').textContent=engine.collected;Array.from($('orb-slots').children).forEach((o,i)=>o.classList.toggle('collected',engine.orbs.some(v=>v.id===i+1&&v.got)));
   $('orb-slots').setAttribute('aria-label',`${engine.collected} de 7 esferas`);
@@ -294,6 +302,7 @@ function hudUpdate(){
   if(engine.activeEncounter)$('objective').textContent=`ARENA · ${engine.enemies.filter(e=>engine.activeEncounter.ids.includes(e.id)&&e.hp>0).length} INIMIGOS`;
   if(engine.activeEncounter)$('direction').textContent='LIMPE A ARENA';
   const guidance=worldGuidance(engine);$('direction').textContent=guidance?(guidance.x<p.x?'← ':'→ ')+guidance.label:'';
+  updateRaditzHud(engine);
   if(engine.episode){$('special-name').textContent=EPISODE_ACTORS[p.character].technique;$('form-label').textContent='EPISÓDIO 1';if(p.character==='gohan')$('timing-cue').textContent='';}
 }
 
@@ -377,6 +386,9 @@ function processEvents(){
       case 'makankosappo':effects.push({type:'piccoloBeam',x:e.x,y:e.y,dir:e.dir,life:.35,max:.35});break;
       case 'gohanPulse':ring(e.x,e.y,'#ffca42',40,.6);break;
       case 'arrivalCheckpoint':{if(engine.journey)break;const old=readArrival();progressSaved=saveArrival({...old,checkpoint:e.checkpoint,time:e.time}).saved;if(!progressSaved)engine.arrival.caption='CHECKPOINT NESTA SESSAO';}break;
+      case 'raditzCheckpoint':progressSaved=checkpointRaditz(e.checkpoint,e.time).saved;break;
+      case 'raditzScene':case 'raditzSceneEnd':clearInput();effects=[];trails=[];duelCamera.reset();syncScreen();break;
+      case 'raditzVictory':progressSaved=finishRaditz(e.time).saved;clearInput();showMenu('won');break;
       case 'victory':{if(engine.journey){progressSaved=finishJourney(engine.time).saved;clearInput();showMenu('won');break;}if(engine.episode){progressSaved=completeEpisode(engine.stageId,engine.time).saved;clearInput();showMenu('won');break;}if(engine.arrival){const old=readArrival();progressSaved=saveArrival({...old,completed:true,checkpoint:0,time:0,bestTime:old.bestTime?Math.min(old.bestTime,engine.time):engine.time}).saved;clearInput();showMenu('won');break;}lastStoryReward=engine.story&&!sagaRecord(saga,engine.stageId).completed?4:0;const result=engine.story?finishSaga(saga,engine.stageId,engine.time,engine.maxCombo,engine.collected):recordVictory(campaign,engine.time,engine.maxCombo,engine.stageId);if(engine.story){saga=result.progress;if(engine.stageId===103)storySaga='freeza';}else campaign=result.progress;progressSaved=result.saved;}clearInput();burst(engine.p.x,engine.p.y-60,85,'#ffe4a2',310,-30);setTimeout(()=>showMenu('won'),900);break;
     }
   }
@@ -438,9 +450,9 @@ function buildAtlas(image,cols,rows){
   }
   return {image:c,frames,scale:105/frames[0].rect[3]};
 }
-function playerAtlas(form=false){return engine.episode&&engine.p.character!=='goku'?atlases[engine.p.character]:engine.versus?fighterAtlas(engine.versus.player):engine.story?(form?atlases.kaioken:atlases.goku):(form?atlases.solar:atlases.base);}
+function playerAtlas(form=false){return (engine.episode||engine.battle)&&engine.p.character!=='goku'?atlases[engine.p.character]:engine.versus?fighterAtlas(engine.versus.player):engine.story?(form?atlases.kaioken:atlases.goku):(form?atlases.solar:atlases.base);}
 function playerPose(p){
-  if(engine.episode&&p.character!=='goku')return {atlas:atlases[p.character],frame:episodePose(p),combo:false};
+  if((engine.episode||engine.battle)&&p.character!=='goku')return {atlas:atlases[p.character],frame:episodePose(p),combo:false};
   const motion=heroAnimator.sample(p,renderDelta);
   const extra=comboPose(p,engine.versus?engine.versus.player.id:engine.story&&!p.form?'goku':null);
   if(extra!==null)return {atlas:atlases.comboRoster,frame:extra,combo:false,motion};
@@ -524,7 +536,7 @@ function renderEnemyBody(e){
   if(e.creature){if(e.hp<=0&&e.dead<=0)return;const a=atlases.coastalCreatures,pose=e.hp<=0?5:e.stun>0?4:e.state==='windup'?2:e.state==='attack'?3:e.state==='run'?1:0,f=a.frames[e.creatureRow*6+pose],scale=82/a.frames[e.creatureRow*6].rect[3];sprite(a.image,f.rect,e.x-cam,e.y,e.dir,scale,{anchor:f.anchor,reaction:e,alpha:e.hp<=0?e.dead/.65:1});if(e.hp>0&&engine.activeEncounter?.ids.includes(e.id)){ctx.fillStyle='#102c3d';ctx.fillRect(e.x-cam-22,e.y-98,44,3);ctx.fillStyle=e.state==='windup'?'#ffb88c':'#d3dfae';ctx.fillRect(e.x-cam-22,e.y-98,44*e.hp/e.maxHp,3);}return;}
 
   const x=e.x-cam;if(x< -140||x>W+140||e.hp<=0&&e.dead<=0)return;
-  const extra=comboPose(e,engine.versus?engine.versus.opponent.id:e.storyBoss);
+  const extra=engine.battle?null:comboPose(e,engine.versus?engine.versus.opponent.id:e.storyBoss);
   if(extra!==null){const atlas=atlases.comboRoster,f=atlas.frames[extra];shadow(x,e.grounded?e.y:WORLD.ground,e.w*.55,.25);sprite(atlas.image,f.rect,x,e.y,e.dir,f.scale,{anchor:f.anchor,reaction:e,hurt:e.flash>.04});drawBossStyle(e,x);if(engine.versus)drawVersusTag(x,e.y+22,'CPU','#ffabb4');return;}
   if(engine.versus){const atlas=fighterAtlas(engine.versus.opponent),f=atlas.frames[versusPose(engine.versus.opponent,e)];shadow(x,e.grounded?e.y:WORLD.ground,e.w*.55,.25);sprite(atlas.image,f.rect,x,e.y,e.dir,f.scale??atlas.scale,{anchor:f.anchor,reaction:e,hurt:e.flash>.04});drawBossStyle(e,x);drawVersusTag(x,e.y+22,'CPU','#ffabb4');return;}
   const boss=e.type===2,scale=boss?.5:.37,moving=['walk','run','flight'].includes(e.state);let frame=e.hp<=0?5:e.stun>0?4:['windup','feint'].includes(e.state)?2:e.state==='attack'?3:moving?Math.floor(e.moveCycle*(e.state==='run'?10:6))%2:0;
@@ -567,6 +579,7 @@ function drawVersusTag(x,y,label,color){
   ctx.save();ctx.font='bold 10px monospace';ctx.textAlign='center';ctx.fillStyle='#061426d9';ctx.fillRect(x-22,y-11,44,16);ctx.fillStyle=color;ctx.fillText(label,x,y);ctx.restore();
 }
 function renderPlayer(){
+  if(drawGohanRush(ctx,engine,cam,atlases))return;
   const p=engine.p,x=p.x-cam,pose=playerPose(p),{frame,atlas}=pose;if(!atlas)return;
   shadow(x,p.grounded?p.y:WORLD.ground,25,Math.max(.07,.27-(WORLD.ground-p.y)*.001));
   if(p.form||p.charging)drawAura(p,x);if(p.state==='genki'){ctx.save();ctx.fillStyle='#c5f8ff';ctx.shadowColor='#50cfff';ctx.shadowBlur=30;ctx.beginPath();ctx.arc(x,p.y-145,12+Math.min(1,p.stateTime)*32,0,Math.PI*2);ctx.fill();ctx.restore();}
@@ -652,6 +665,7 @@ function renderCombatDebug(){
 }
 function render(dt){
   renderDelta=dt*(engine.versus?.finish?.scale||1);
+  if(engine.battle?.scene){drawRaditzScene(ctx,engine,W,H,atlases,images,reduced);return;}
   const screenW=W,screenH=H,p=engine.p;
   const opponent=engine.versus?engine.boss:engine.activeEncounter?engine.enemies.filter(e=>e.hp>0&&engine.activeEncounter.ids.includes(e.id)).sort((a,b)=>Math.abs(a.x-p.x)-Math.abs(b.x-p.x))[0]:null;
   const adaptive=opponent&&engine.mode!=='intro';let target=clamp(p.x-W*.35,0,Math.max(0,(engine.episode?engine.story.width:engine.arrival?ARRIVAL.width:WORLD.width)-W));
@@ -665,6 +679,7 @@ function render(dt){
   }else{duelCamera.reset();cam+=(target-cam)*Math.min(1,dt*7);cameraZoom=1;}
   renderBackground();renderTerrain();renderHazards();renderPortal();renderOrbs();renderArena();
   if(engine.arrival)drawArrivalWorld(ctx,engine,cam,atlases,sprite,reduced);
+  if(engine.battle)drawRaditzWorld(ctx,engine,cam,atlases);
   if(engine.episode)drawEpisodeWorld(ctx,engine,cam,atlases,sprite);
   if(engine.mode==='intro'){
     const previewX=W*.71;shadow(previewX,WORLD.ground,30);const a=atlases.goku,f=a.frames[Math.floor(engine.visualTime*2)%2];sprite(a.image,f.rect,previewX,WORLD.ground,1,a.scale*1.15,{anchor:f.anchor});
@@ -719,12 +734,12 @@ function renderMap(){
   }
   const level=getStage(selectedStage)||levels[0],record=recordFor(level.id),ready=unlocked(level.id);
   $('map-number').textContent=level.biome;$('map-title').textContent=level.name;$('map-description').textContent=level.detail;$('map-enemies').textContent=level.enemy;
-  $('map-goal').textContent=legacy?'Reuna as 7 esferas e derrote '+level.bossName:level.id===1101?'Ajudar os moradores e preparar o resgate de Gohan':level.id===1102?'Piccolo · abrir a rota até Raditz':level.id===1103?'Goku / Piccolo / Gohan · preparar o resgate':'Batalha em equipe · próxima parte';
+  $('map-goal').textContent=legacy?'Reuna as 7 esferas e derrote '+level.bossName:level.id===1101?'Ajudar os moradores e preparar o resgate de Gohan':level.id===1102?'Piccolo · abrir a rota até Raditz':level.id===1103?'Goku / Piccolo / Gohan · preparar o resgate':'Goku / Piccolo / Gohan · vença Raditz em equipe';
   $('map-preview').style.backgroundImage=level.id===1101?"url('/assets/arrival-coast-v23.png')":"url('/assets/valley.png')";
   renderSagaScene(document,level,atlases);
   $('map-play').disabled=!level.available||!ready;$('map-play-label').textContent=!level.available?'EM DESENVOLVIMENTO':!ready?'CONCLUA A MISSÃO ANTERIOR':record.completed?'JOGAR NOVAMENTE':record.checkpoint||record.segment>1101?'RETOMAR CHECKPOINT':'INICIAR MISSÃO '+(level.number||'1');
-  $('map-stage-status').textContent=!level.available?'Será implementada na próxima parte do plano.':!ready?'Conclua a missão anterior para continuar.':record.completed?'Missão concluída.'+(record.bestTime?' Melhor tempo: '+formatTime(record.bestTime):''):record.checkpoint||record.segment>1101?'Objetivo '+((record.segment-1101)*4+record.checkpoint+1)+' de 12 salvo.':'Pronto para jogar.';
-  $('map-orbs').parentElement.hidden=true;$('map-best-combo').parentElement.hidden=true;$('map-completed').textContent=levels.filter(l=>recordFor(l.id).completed).length+' / '+levels.filter(l=>l.available).length;$('map-save-note').textContent=legacy?'Todas as fases antigas desbloqueadas. Progresso preservado.':progressSaved?'Confrontos antigos desativados na campanha. Versus e saves preservados.':'Progresso disponível apenas nesta sessão.';
+  $('map-stage-status').textContent=!level.available?'Será implementada na próxima parte do plano.':!ready?'Conclua a missão anterior para continuar.':record.completed?'Missão concluída.'+(record.bestTime?' Melhor tempo: '+formatTime(record.bestTime):''):record.checkpoint||record.segment>1101?level.id===1201?'Etapa '+(record.checkpoint+1)+' de 4 salva.':'Objetivo '+((record.segment-1101)*4+record.checkpoint+1)+' de 12 salvo.':'Pronto para jogar.';
+  $('map-orbs').parentElement.hidden=true;$('map-best-combo').parentElement.hidden=true;$('map-completed').textContent=levels.filter(l=>recordFor(l.id).completed).length+' / '+levels.filter(l=>l.available).length;$('map-save-note').textContent=legacy?'Todas as fases antigas desbloqueadas. Progresso preservado.':progressSaved?'Jornada e batalha de Raditz · progresso salvo neste dispositivo.':'Progresso disponível apenas nesta sessão.';
 }
 
 function setControlGuide(mode){
@@ -742,6 +757,7 @@ function pollController(){
   if(!result.connected||document.hidden)return {pressed:{}};
   const input=result.input,edges=input.pressed;
   if(Object.values(edges).some(Boolean)){document.body.classList.add('using-controller');sound.unlock();}
+  if(engine.battle?.scene){if(edges.pause){engine.battle.scenePaused?engine.resume():engine.pause();clearInput();}if(edges.back){engine.finishBattleScene();clearInput();}return {pressed:{}};}
   if(engine.dialogue){if(edges.confirm||edges.attack||edges.back){engine.advanceDialogue(!!edges.back);clearInput();}return {pressed:{}};}
   if(!$('skills-modal').hidden&&edges.back){closeSkills();return {pressed:{}};}
   if(edges.help&&$('skills-modal').hidden){if(!$('controls-modal').hidden)closeControls();else if(!touchLayout.editing)openControls();return {pressed:{}};}
@@ -774,7 +790,7 @@ function pollController(){
 }
 function renderCutin(){
   if(engine.saiyanCombat)return;
-  const e=effects.find(e=>e.type==='cutin');if(!e||reduced||engine.episode&&engine.p.character!=='goku')return;
+  const e=effects.find(e=>e.type==='cutin');if(!e||reduced||(engine.episode||engine.battle)&&engine.p.character!=='goku')return;
   const t=1-e.life/e.max,atlas=playerAtlas(e.solar),f=atlas.frames[27];
   ctx.save();ctx.globalAlpha=Math.min(1,(1-t)*4);ctx.fillStyle='#031021dc';ctx.fillRect(0,H*.2,W,H*.23);ctx.strokeStyle=e.solar?'#ffdc79':'#8bf0ff';ctx.lineWidth=2;ctx.strokeRect(-2,H*.2,W+4,H*.23);
   const [sx,sy,sw,sh]=f.rect;ctx.drawImage(atlas.image,sx,sy,sw,sh*.55,W*.12,H*.205,H*.16,H*.21);
