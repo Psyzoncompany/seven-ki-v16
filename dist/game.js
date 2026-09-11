@@ -315,7 +315,7 @@ function processEvents(){
       case 'dialogueEnd':$('dialogue-panel').hidden=true;clearInput();syncScreen();break;
       case 'enemyBeam':effects.push({type:'beam',x:e.x,y:e.y,dir:e.dir,enemy:true,life:effectDuration.beam,max:effectDuration.beam});shake=10;break;
       case 'genkiCharge':ring(e.x,e.y,'#c8f6ff',45,1.2);break;
-      case 'genki':effects.push({type:'genki',x:e.x+engine.p.dir*220,y:e.y,life:effectDuration.genki,max:effectDuration.genki});burst(e.x,e.y,60,'#b8f8ff',360);shake=15;sound.play('beam');break;
+      case 'genki':effects.push({type:'genki',x:e.x+engine.p.dir*150,y:e.y,life:Math.min(.22,effectDuration.genki),max:Math.min(.22,effectDuration.genki)});burst(e.x,e.y,12,'#b8f8ff',130);shake=4;sound.play('beam');break;
       case 'hazardHit':burst(e.x,e.y,18,'#ff963c',180);break;
       case 'toast':showToast(controllerConnected?(e.text.replaceAll('WASD','ANALÓGICO').replaceAll('E:','RB:').replaceAll('←:','X:').replaceAll('Ctrl','LT').replaceAll('Aperte T','Pressione R3')):touch&&e.mobile?e.mobile:e.text);break;
       case 'zone':showZone(e.title,e.subtitle);break;
@@ -618,7 +618,7 @@ function renderEffects(){
       const angle=e.style==='rise'?-1.25:e.style==='fall'?1.25:0;ctx.rotate(angle);
       for(let i=-1;i<=1;i++){ctx.beginPath();ctx.moveTo(4+t*28,i*5);ctx.lineTo(24+t*(e.heavy?95:60),i*(12+t*10));ctx.stroke();}
     }else
-    if(e.type==='genki'){ctx.globalAlpha=1-t;ctx.fillStyle='#eaffff';ctx.shadowColor='#48bcff';ctx.shadowBlur=35;ctx.beginPath();ctx.arc(x,y,35+t*140,0,Math.PI*2);ctx.fill();}
+    if(e.type==='genki'){ctx.globalAlpha=(1-t)*.55;ctx.fillStyle='#eaffff';ctx.shadowColor='#48bcff';ctx.shadowBlur=10;ctx.beginPath();ctx.arc(x,y,10+t*28,0,Math.PI*2);ctx.fill();}
     else if(e.type==='pursuit'){ctx.globalAlpha=(1-t)*.7;ctx.strokeStyle='#c5faff';ctx.lineWidth=2;for(let i=0;i<7;i++){ctx.beginPath();ctx.moveTo(e.fromX-cam,e.fromY-65+i*8);ctx.lineTo(x,y-25+i*8);ctx.stroke();}}
     else if(e.type==='enemyDash'){ctx.globalAlpha=(1-t)*.65;ctx.strokeStyle='#c7a8ff';ctx.lineWidth=2;for(let i=-2;i<=2;i++){ctx.beginPath();ctx.moveTo(x-e.dir*(18+t*85),y+i*11-45);ctx.lineTo(x-e.dir*(62+t*130),y+i*11-45);ctx.stroke();}}
     else if(e.type==='impactRays'&&!reduced){ctx.globalAlpha=(1-t)*.6;ctx.strokeStyle='#ffeac1';ctx.lineWidth=2;for(let i=0;i<12;i++){const a=i*Math.PI/6,r=32+t*85;ctx.beginPath();ctx.moveTo(x+Math.cos(a)*r,y+Math.sin(a)*r);ctx.lineTo(x+Math.cos(a)*(r+25),y+Math.sin(a)*(r+25));ctx.stroke();}}
