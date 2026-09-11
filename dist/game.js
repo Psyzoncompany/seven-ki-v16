@@ -25,7 +25,7 @@ const notes=document.getElementById('gameplay-notes');
 notes.append(document.querySelector('.arrival-objective'),document.getElementById('arrival-radio'),document.getElementById('timing-cue'),document.getElementById('direction'));
 // The play surface owns touch gestures; do not let Safari interpret them as zoom.
 for(const type of ['gesturestart','gesturechange','gestureend','dblclick'])document.addEventListener(type,e=>{if(e.target.closest('#app'))e.preventDefault();},{passive:false});
-document.addEventListener('touchmove',e=>{if(!e.target.closest('.controls-card,.layout-card,.skills-card,.versus-select,.world-map'))e.preventDefault();},{passive:false});
+document.addEventListener('touchmove',e=>{if(!e.target.closest('.controls-card,.layout-card,.skills-card,.versus-select,.world-map,#gameplay-notes'))e.preventDefault();},{passive:false});
 
 import {WORLD, clamp} from './engine.js?v=16';
 import {VersusEngine as GameEngine,VERSUS_FIGHTERS,versusFighter,versusPose} from './versus.js?v=18';

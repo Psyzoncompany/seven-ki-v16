@@ -16,3 +16,126 @@
 @media(max-width:700px){#intro{background-position:65% center}#intro .intro-content{width:320px;max-width:52%;margin-left:3%;padding:16px}#intro h1 strong{font-size:48px}#intro h1 small{font-size:19px}#intro .intro-subtitle{font-size:20px}#intro .primary-button,#intro .menu-option,#intro #start-text{font-size:19px}#intro .intro-meta{font-size:14px}}
 @media(orientation:portrait) and (max-width:480px){#intro{background-position:70% top;background-size:auto 65%;background-repeat:no-repeat;background-color:#a8d9ed;align-items:flex-end;padding:0 0 18px}#intro .intro-content{width:88%;max-width:88%;margin:0 auto;padding:12px 18px}#intro .overline{display:none}#intro h1{margin:4px 0}#intro h1 strong{font-size:47px}#intro .intro-subtitle{margin:5px 0 8px}#intro .primary-button,#intro .menu-option{min-height:36px;margin-top:7px}#intro .intro-meta{margin-top:10px}}
 @media(orientation:landscape) and (max-height:520px){#intro .intro-content{padding:10px 16px;width:325px;max-width:48%;margin-left:3%}#intro .overline,#intro .intro-meta{display:none}#intro h1{margin:3px 0}#intro h1 strong{font-size:45px}#intro h1 small{font-size:17px}#intro .intro-subtitle{font-size:19px;margin:6px 0}#intro .primary-button,#intro .menu-option{min-height:32px;margin-top:6px;padding:5px 12px;font-size:18px}}
+
+/* Mobile combat polish: keep the arena readable while controls stay reachable. */
+@media (pointer: coarse), (max-width: 760px) {
+  body.minimal-combat[data-screen="playing"] #stage {
+    min-height: 0;
+  }
+  body.minimal-combat[data-screen="playing"] #touch-controls {
+    bottom: max(8px, env(safe-area-inset-bottom));
+    height: clamp(156px, 25dvh, 190px);
+    padding-bottom: max(2px, env(safe-area-inset-bottom));
+    background: linear-gradient(180deg, transparent 0%, #06132718 32%, #06132766 100%);
+  }
+  body.minimal-combat[data-screen="playing"] #touch-controls [data-action] {
+    min-width: 44px;
+    min-height: 44px;
+    font-size: 20px;
+    opacity: .92;
+  }
+  body.minimal-combat[data-screen="playing"] #touch-controls [data-action] small {
+    font: 11px/1 'Seven Pixel', monospace;
+    letter-spacing: 0;
+  }
+  body.minimal-combat[data-screen="playing"] #touch-controls .main-attack {
+    min-width: 64px;
+    min-height: 64px;
+    font-size: 27px;
+  }
+  body.minimal-combat[data-screen="playing"] #touch-controls .touch-toolbar {
+    min-width: 112px;
+    min-height: 30px;
+    padding: 5px 10px;
+    font: 13px/1 'Seven Pixel', monospace;
+    border-radius: 4px;
+  }
+  body.minimal-combat[data-screen="playing"] #touch-controls [data-action]:focus-visible,
+  body.minimal-combat[data-screen="playing"] #touch-powers:focus-visible {
+    outline: 3px solid #ffe08a;
+    outline-offset: 3px;
+  }
+  body.minimal-combat .hud {
+    left: max(7px, env(safe-area-inset-left));
+    right: max(7px, env(safe-area-inset-right));
+  }
+  body.minimal-combat .hud .player-hud {
+    width: min(236px, 67vw);
+    min-width: 0;
+  }
+  body.minimal-combat .orb-hud {
+    min-width: 58px;
+    padding-inline: 5px;
+  }
+  body.minimal-combat .boss-hud {
+    left: 16%;
+    right: 16%;
+    max-width: 68%;
+  }
+}
+
+@media (orientation: portrait) and (max-width: 380px) {
+  body.minimal-combat[data-screen="playing"] #touch-controls {
+    height: 166px;
+  }
+  body.minimal-combat .hud .player-hud {
+    width: min(216px, 65vw);
+  }
+  body.minimal-combat .hud-name {
+    font-size: 16px;
+  }
+  body.minimal-combat .boss-hud {
+    left: 11%;
+    right: 11%;
+    max-width: 78%;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 520px) and (pointer: coarse) {
+  body.minimal-combat[data-screen="playing"] #touch-controls {
+    height: 128px;
+  }
+  body.minimal-combat[data-screen="playing"] #touch-controls [data-action] small {
+    font-size: 10px;
+  }
+  body.minimal-combat .hud .player-hud {
+    width: 218px;
+  }
+}
+
+/* Reserve real space for touch controls instead of covering them with mission notes. */
+@media (pointer:coarse), (max-width:760px) {
+  body[data-screen=playing] .game-shell{display:flex;flex-direction:column;height:100%;min-height:0}
+  body[data-screen=playing] #stage{flex:1 1 0;min-height:0;height:auto}
+  body[data-screen=playing] #gameplay-notes{order:1;max-height:80px;overflow:auto;padding:5px 10px;touch-action:pan-y}
+  body[data-screen=playing] #gameplay-notes .arrival-objective>span,
+  body[data-screen=playing] #gameplay-notes #arrival-radio{display:none}
+  body[data-screen=playing] #touch-controls{position:relative;inset:auto;order:2;flex:0 0 190px;height:190px;width:100%;z-index:16;overflow:hidden;background:#e2eff7;pointer-events:auto}
+  body.minimal-combat[data-screen=playing] #touch-controls{position:relative;inset:auto;height:190px;flex-basis:190px;background:linear-gradient(#d9eafa,#b3d0e7)}
+  body.minimal-combat .hud .player-hud{background-color:transparent;max-width:none;padding:17px 20px 16px 69px}
+  body.minimal-combat .pause-button{top:12px;right:10px;z-index:20}
+  body.minimal-combat .arrival-radar{top:66px;width:90px}
+  #intro #intro-versus{color:#214a71}
+  .world-map .map-body{flex:none}
+  .world-map .map-footer{position:static;margin-top:10px}
+  body.versus-mode.minimal-combat .hud .player-hud{width:46%;min-height:72px;padding:10px;background:#edf7ff;border:2px solid #8cb3cf}
+  body.versus-mode .player-hud .portrait{display:none}
+  body.versus-mode.minimal-combat .boss-hud{top:14px;left:auto;right:58px;width:38%;max-width:none;padding:8px}
+  body.versus-mode #round-score{top:96px}
+}
+@media (orientation:landscape) and (max-height:600px) {
+  body[data-screen=playing] #gameplay-notes{max-height:44px;padding:2px 10px}
+  body[data-screen=playing] #gameplay-notes .arrival-objective p{display:none}
+  body[data-screen=playing] #touch-controls,
+  body.minimal-combat[data-screen=playing] #touch-controls{position:absolute;inset:auto 0 max(4px,env(safe-area-inset-bottom));height:125px;background:transparent;pointer-events:none}
+  body[data-screen=playing] #touch-controls [data-action]{pointer-events:auto}
+  body.minimal-combat .arrival-radar{display:none}
+}
+@media (pointer:coarse), (max-width:760px) {
+  #touch-controls:not(.powers-open) [data-action=guard]{visibility:visible;pointer-events:auto;left:43%!important;top:42%!important}
+  .child-segment #touch-controls [data-action=guard]{visibility:visible;pointer-events:auto}
+}
+@media (orientation:landscape) and (max-height:600px) {
+  #touch-controls:not(.powers-open) [data-action=guard]{left:39%!important;top:65%!important}
+}
+body.minimal-combat .boss-hud>div:first-child{color:#214a71}

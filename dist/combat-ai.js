@@ -26,7 +26,10 @@ export class CombatDirector{
     const dist=Math.abs(player.x-e.x),vertical=Math.abs(player.y-e.y),phase=movePhase(player.attack);
     if(dist>player.attack.move.reach+68||vertical>125||phase==='recovery')return null;
     const learned=this.sameAttackCount>=2||this.tendency('attack')>.38,chance=learned?Math.min(.96,p.defense+.45):Math.min(.82,p.defense+.08);
-    if(engine.random()>chance)return null;c.cancelCooldown=.72;c.stamina-=24;c.comboQueue=[];
+    // One reaction roll per swing: retrying every frame made even low odds certain.
+    if(c.reactedAttack===player.attack)return null;
+    c.reactedAttack=player.attack;
+    if(engine.random()>chance)return null;c.cancelCooldown=.9;c.stamina-=24;c.comboQueue=[];
     if(c.ki>=18&&(p.vanishChance>.2||this.airSpam)){c.ki-=18;return 'vanish';}
     return learned&&p.counterChance>.2?'counterGuard':'guard';
   }

@@ -216,7 +216,7 @@ export class GameEngine {
           }
         }
       }
-	      if(a.t>=m.duration||p.queued&&a.connected&&canCancel(a,p.queued.kind==='normal'?(p.grounded?'light':'air'): 'air')){const queued=p.queued;p.attack=null;p.queued=null;p.state='idle';p.recovery=queued?0:.045;if(queued)this.beginAttack(queued.kind,queued.perfect);}
+	      if(a.t>=m.duration||p.queued&&a.connected&&canCancel(a,p.queued.kind==='normal'?(p.grounded?'light':'air'): 'air')){const queued=a.connected?p.queued:null;p.attack=null;p.queued=null;p.state='idle';p.recovery=queued?0:.045;if(queued)this.beginAttack(queued.kind,queued.perfect);}
     }
     const prevY=p.y,prevX=p.x;
 	    if(!['special','genki','charge'].includes(p.state)&&!p.dragonRush)p.vy+=WORLD.gravity*dt*(p.flying&&!p.diving&&p.stun<=0?(input.flightMode?0:.06):p.airFloat>0&&!p.diving&&p.stun<=0?.3:1);
@@ -373,7 +373,7 @@ export class GameEngine {
         this.parries++;p.ki=clamp(p.ki+16,0,100);p.invincible=.22;p.riposteWindow=.45;this.freeze=.055;
         this.emit('parry',{x:p.x+p.dir*30,y:p.y-45});this.tip('APARO PERFEITO · +16 KI');
         const attacker=this.enemies.find(e=>e.hp>0&&Math.abs(e.x-sourceX)<10);if(attacker){attacker.stun=.55;attacker.state='hurt';attacker.timer=.55;attacker.combat&&(attacker.combat.comboQueue=[]);}
-      }else{p.guardMeter=Math.max(0,p.guardMeter-(options.heavy?42:22));p.hp=Math.max(1,p.hp-Math.ceil(damage*.12));p.vx=dir*70;p.invincible=.12;if(p.guardMeter<=0){p.stun=.8;p.guarding=false;p.state='hurt';this.emit('playerGuardBreak',{x:p.x,y:p.y-48});}else this.emit('guard',{x:p.x+p.dir*28,y:p.y-43});}
+      }else{p.guardMeter=Math.max(0,p.guardMeter-(options.heavy?42:22));p.hp=Math.max(1,p.hp-Math.ceil(damage*.12));p.vx=dir*70;p.invincible=.12;if(p.guardMeter<=0){p.stun=.8;p.lastHitstun=.8;p.stateTime=0;p.guarding=false;p.attack=null;p.queued=null;p.dashTimer=0;p.state='hurt';this.emit('playerGuardBreak',{x:p.x,y:p.y-48});}else this.emit('guard',{x:p.x+p.dir*28,y:p.y-43});}
       return false;
     }
     if(options.combo){p.incomingCombo=p.incomingComboTime>0?p.incomingCombo+1:1;p.incomingComboTime=1.15;damage=Math.round(damage*Math.max(.55,1-(p.incomingCombo-1)*.16));}
