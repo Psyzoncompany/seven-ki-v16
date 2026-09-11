@@ -1,0 +1,18 @@
+/* One illustrated start screen, sharing the pixel HUD palette and local font. */
+.story-map.legacy-map .map-nodes{grid-template-columns:repeat(2,minmax(0,1fr));overflow-y:auto}
+#intro .intro-content{max-height:100%;overflow-y:auto}
+#intro{background:#83caff url('/assets/title-pixel-v27.png') center/cover no-repeat;image-rendering:pixelated}
+#intro .intro-content{position:relative;width:390px;max-width:43%;margin-left:4%;padding:24px 22px;background:#fff7dfeb;border:4px solid #1f5688;box-shadow:inset 0 0 0 3px #ffce56,6px 6px 0 #15395755;border-radius:0}
+#intro .overline{font:20px 'Seven Pixel',monospace;color:#395a70;letter-spacing:2px}
+#intro h1{margin:14px 0}#intro h1 small{font:24px 'Seven Pixel',monospace;color:#a8540b;letter-spacing:2px}
+#intro h1 strong{font:64px/.9 'Seven Pixel',monospace;color:#195589;text-shadow:2px 2px #f9bf42}
+#intro h1 strong span{color:#e88818}#intro .intro-subtitle{font:24px 'Seven Pixel',monospace;letter-spacing:1px;color:#285079;margin:10px 0 20px}
+#intro .primary-button,#intro .menu-option{width:100%;max-width:100%;min-height:42px;margin:10px 0 0;font:22px 'Seven Pixel',monospace}
+#intro #start-text{font:22px 'Seven Pixel',monospace}#intro .menu-option{background:#f1faff;border:2px solid #4b80a8;box-shadow:2px 2px #15395733}
+#intro .intro-meta{font:16px 'Seven Pixel',monospace;color:#365971;letter-spacing:0;gap:8px;flex-wrap:wrap;margin-top:18px}#intro .level-stamp{display:none}
+.story-map .map-nodes,.story-map.freeza-map .map-nodes{grid-template-columns:repeat(2,minmax(0,1fr))}
+.menu-card,.controls-card,.dialogue-panel,.arrival-radar,.map-detail{border-radius:0;image-rendering:pixelated}
+.menu-card{border:4px solid #275b89;box-shadow:inset 0 0 0 3px #ffcf59,5px 5px #16395755;background:#fff7df}
+@media(max-width:700px){#intro{background-position:65% center}#intro .intro-content{width:320px;max-width:52%;margin-left:3%;padding:16px}#intro h1 strong{font-size:48px}#intro h1 small{font-size:19px}#intro .intro-subtitle{font-size:20px}#intro .primary-button,#intro .menu-option,#intro #start-text{font-size:19px}#intro .intro-meta{font-size:14px}}
+@media(orientation:portrait) and (max-width:480px){#intro{background-position:70% top;background-size:auto 65%;background-repeat:no-repeat;background-color:#a8d9ed;align-items:flex-end;padding:0 0 18px}#intro .intro-content{width:88%;max-width:88%;margin:0 auto;padding:12px 18px}#intro .overline{display:none}#intro h1{margin:4px 0}#intro h1 strong{font-size:47px}#intro .intro-subtitle{margin:5px 0 8px}#intro .primary-button,#intro .menu-option{min-height:36px;margin-top:7px}#intro .intro-meta{margin-top:10px}}
+@media(orientation:landscape) and (max-height:520px){#intro .intro-content{padding:10px 16px;width:325px;max-width:48%;margin-left:3%}#intro .overline,#intro .intro-meta{display:none}#intro h1{margin:3px 0}#intro h1 strong{font-size:45px}#intro h1 small{font-size:17px}#intro .intro-subtitle{font-size:19px;margin:6px 0}#intro .primary-button,#intro .menu-option{min-height:32px;margin-top:6px;padding:5px 12px;font-size:18px}}

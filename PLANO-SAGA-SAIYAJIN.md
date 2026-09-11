@@ -1,6 +1,19 @@
 # Plano de expansão da Saga Saiyajin
 
-Status: execução por partes. Fases 1.1, 1.2 e 1.3 implementadas. Campanha limitada a essa sequência; confronto 2.1 com Raditz e demais episódios permanecem planejados. Versus e saves antigos preservados.
+Status: execução por partes. Os antigos trechos 1.1, 1.2 e 1.3 foram reunidos na missão única “A chegada de Raditz”, com 12 objetivos e checkpoints entre regiões. Confronto 2.1 com Raditz e demais episódios permanecem planejados. Versus e saves antigos preservados.
+
+### Atualização — missão unificada
+
+- Corrigida a transição para Piccolo: o carregamento da região consome a transição pendente uma única vez, permitindo continuar os diálogos e o movimento.
+- Novo botão “Modo história antigo” na tela inicial: acesso separado aos sete confrontos anteriores das sagas Saiyajin e Freeza, todos desbloqueados. Essa opção não avança nem desbloqueia as missões futuras da campanha nova.
+
+- Uma entrada no mapa para todo o Episódio 1. Costa, aliança e aproximação da cápsula prosseguem automaticamente, sem vitória ou seleção de fase entre trechos.
+- Reaproveitados os cenários, encontros, diálogos e personagens já implementados. Os números 1.1, 1.2 e 1.3 identificam apenas trechos internos e registros históricos deste plano.
+- Removidas as pedras que exigiam destruição para continuar nas montanhas e no resgate. Mantidas as duas pedras sólidas do socorro ao fazendeiro.
+- Novo socorro: um menino pede ajuda na encosta; Piccolo precisa afastar a criatura e alcançá-lo. Depois ele agradece e segue para casa.
+- Save unificado em `sevenki-raditz-journey-v1`, com região, objetivo e tempo acumulado. O primeiro acesso aproveita o progresso anterior sem apagar suas chaves.
+- Tela inicial com nova ilustração em pixel art gerada por ImageGen, combinada ao HUD claro, bordas pixeladas e fonte VT323. Menino com duas poses próprias geradas por ImageGen.
+- As entregas anteriores descritas abaixo são histórico; esta atualização substitui a separação do Episódio 1 em três fases públicas.
 
 ## 1. Objetivo
 
@@ -60,9 +73,9 @@ Os nomes e números abaixo organizam o planejamento. Os identificadores internos
 
 ### Episódio 1 — A chegada de Raditz
 
-Serão três fases jogáveis antes da batalha com Raditz. A batalha será uma fase adicional.
+Uma missão jogável reúne os três trechos abaixo antes da batalha com Raditz. A batalha será uma missão adicional, ainda bloqueada. Os trechos compartilham progresso e conclusão; não aparecem como fases próprias no mapa.
 
-| Fase | Conteúdo | Personagem | Objetivo principal |
+| Trecho interno | Conteúdo | Personagem | Objetivo principal |
 | --- | --- | --- | --- |
 | 1.1 — Um poder desconhecido | Introdução na Terra, deslocamento até a área de chegada e descoberta da ameaça | Goku | Investigar a região e acompanhar os acontecimentos que levam ao sequestro |
 | 1.2 — Uma aliança improvável | Encontro com Piccolo, travessia e confrontos curtos de preparação | Piccolo | Localizar a rota até Raditz e aprender suas ações próprias |

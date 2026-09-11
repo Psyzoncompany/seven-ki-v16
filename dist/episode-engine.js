@@ -13,10 +13,11 @@ export class CampaignEngine extends VersusEngine{
   const record=(build.episodes||readEpisodes()).missions[id],index=record.completed?0:record.checkpoint;
   this.episode={step:index,hold:0,elapsed:0,sceneTime:0,burst:false,tremor:0};
   this.neutralPlayer=structuredClone(this.p);this.time=index?record.time:0;
-  this.rocks=(id===1102?[{x:2050,y:320,w:37,h:82}]:[{x:1800,y:320,w:32,h:72},{x:1890,y:320,w:34,h:80}]).map((r,i)=>({...r,id:'episode-rock-'+i,variant:i%2,hp:2,broken:index>1}));
+  this.rocks=[];
   this.enemies=createCoastalCreatures(0);const xs=id===1102?[1000,2420,2530]:[840,970];
   this.enemies=this.enemies.slice(0,xs.length).map((e,i)=>({...e,x:xs[i],home:xs[i],hp:index>(i===0||id===1103?0:2)?0:60+i*12,maxHp:60+i*12,missionStep:i===0||id===1103?0:2}));
   this.encounters=(id===1102?[{left:750,right:1200,ids:[0],missionStep:0},{left:2290,right:2670,ids:[1,2],missionStep:2}]:[{left:700,right:1120,ids:[0,1],missionStep:0}]).map(a=>({...a,cleared:index>a.missionStep,active:false}));
+  if(id===1102){this.enemies.push({...createCoastalCreatures(0)[1],id:3,x:1810,home:1810,missionStep:1,hp:index>1?0:58,maxHp:58});this.encounters.push({left:1700,right:2110,ids:[3],missionStep:1,cleared:index>1,active:false});}
   this.orbs=[];this.activeEncounter=null;this.hazards=mission.hazards.map(h=>({...h}));
   this.switchActor(mission.objectives[index].actor,mission.objectives[index].checkpoint,false);
  }
@@ -81,13 +82,6 @@ export class CampaignEngine extends VersusEngine{
   if(!this.episode)return super.updateProgress();
   const m=this.episode,p=this.p,t=this.story.objectives[m.step],dt=m.dt||1/60;
   this.zone=m.step;
-  // The same real melee and projectile hitboxes used in combat open the passage.
-  const a=p.attack,box=a&&a.t>=a.move.active&&a.t<=a.move.end?this.playerAttackBox():null;
-  for(const r of this.rocks){if(r.broken)continue;let hit=false;
-   if(box&&!a.hit.has(r.id)&&box.x<r.x+r.w&&box.x+box.w>r.x-r.w&&box.y<r.y&&box.y+box.h>r.y-r.h){a.hit.add(r.id);hit=true;}
-   for(const s of this.shots)if(s.owner==='player'&&s.life>0&&Math.abs(s.x-r.x)<r.w+s.r&&s.y>r.y-r.h-s.r&&s.y<r.y+s.r){s.life=0;hit=true;}
-   if(hit&&--r.hp<=0){r.broken=true;this.emit('rockBreak',{x:r.x,y:r.y-20});}
-  }
   if(t.captive){
    m.elapsed+=dt;const shelter=p.x>=2790&&p.x<=2910;
    m.hold=shelter&&p.guarding?m.hold+dt:m.hold;
@@ -97,7 +91,6 @@ export class CampaignEngine extends VersusEngine{
    if(this.mode!=='playing'||m.hold<6)return;
   }else{
    if(t.fight!==undefined&&!this.encounters[t.fight].cleared)return;
-   if(t.rocks&&this.rocks.some(r=>!r.broken))return;
    if(Math.abs(p.x-t.x)>105||Math.abs(p.y-t.y)>90)return;
   }
   if(m.step===this.story.objectives.length-1){this.mode='won';this.openScene('outro');return;}

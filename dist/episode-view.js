@@ -4,7 +4,12 @@ export function drawEpisodeWorld(c,g,cam,atlases,sprite){
  const m=g.episode,p=g.p;
  const actor=(id,x,y,frame=0)=>{const a=atlases[id],f=a.frames[frame];sprite(a.image,f.rect,x-cam,y,1,f.scale??EPISODE_ACTORS[id].height/a.frames[0].rect[3],{anchor:f.anchor});};
  if(g.stageId===1102){actor('goku',m.step===0?360-Math.min(1,m.sceneTime/3)*50:m.step===3?3130:Math.max(180,p.x-150),462);}
- else if(p.character!=='gohan')actor(p.character==='piccolo'?'goku':'piccolo',m.step===3?3120:Math.max(180,p.x-140),462);
+ if(g.stageId===1102&&m.step<=2){
+  const a=atlases.villageBoy,f=a.frames[m.step>1?1:0],x=1970-cam;
+  sprite(a.image,f.rect,x,320,1,64/a.frames[0].rect[3],{anchor:f.anchor});
+  c.save();c.font='18px "Seven Pixel", monospace';c.textAlign='center';c.fillStyle='#fff6df';c.fillRect(x-98,332,196,25);c.fillStyle='#174675';c.fillText(m.step>1?'Obrigado pela ajuda!':'Socorro! Me ajude!',x,350);c.restore();
+ }
+ if(g.stageId===1103&&p.character!=='gohan')actor(p.character==='piccolo'?'goku':'piccolo',m.step===3?3120:Math.max(180,p.x-140),462);
  if(g.stageId===1103){
   const a=atlases.arrivalProps,f=a.frames[1];sprite(a.image,f.rect,3020-cam,466,-1,140/f.rect[3],{anchor:.5});
   if(p.character==='gohan'){
@@ -36,6 +41,7 @@ export function updateEpisodeHud(g,root){
  for(const platform of g.platforms){c.fillStyle='#7cb87f';c.fillRect(px(platform.x),py(platform.y),platform.w/span*(w-16),3);}
  for(const r of g.rocks)if(!r.broken){c.fillStyle='#986b46';c.fillRect(px(r.x)-2,py(r.y-r.h),4,r.h/462*(h-20));}
  for(const e of g.enemies)if(e.hp>0&&Math.abs(e.x-g.p.x)<650){c.fillStyle='#c23d3b';c.fillRect(px(e.x)-2,py(e.y)-3,4,4);}
+ if(g.stageId===1102&&m.step<=2){c.fillStyle='#276dc2';c.fillRect(px(1970)-3,py(320)-3,6,6);}
  if(!t.captive){c.fillStyle='#4974c5';c.fillRect(px(Math.max(180,g.p.x-140))-2,py(462)-3,4,4);}
  c.fillStyle='#b27500';c.fillRect(px(t.x)-3,py(t.y)-4,6,6);c.fillStyle='#007458';c.beginPath();c.arc(px(g.p.x),py(g.p.y),3.5,0,Math.PI*2);c.fill();
 }

@@ -15,11 +15,6 @@ function fight(g){
  }
  close(g);g.updateEncounters();target(g);
 }
-function rocks(g){
- const r=g.rocks.find(r=>!r.broken);Object.assign(g.p,{x:r.x-110,y:r.y,vx:0,vy:0,dir:1,ki:100,grounded:false});
- for(let i=0;i<120&&g.rocks.some(r=>!r.broken);i++)g.step(1/60,{charge:true,special:true,pressed:i===0?{special:true}:{}});
- assert(g.rocks.every(r=>r.broken),'Makankosappo fired using actual special input');close(g);target(g);
-}
 test('campaign disables old fights and Freeza even for veteran saves; Versus keeps its roster',()=>{
  const g=new CampaignEngine();for(const id of [1,2,101,102,103,201,202,203,204,1201])assert.equal(g.start(id,{legacy}),false);
  assert.equal(g.start(1102),false);assert(g.start(1101));g.startVersus('freeza','vegeta','namek');assert.equal(g.versus.player.id,'freeza');assert.equal(g.episode,null);assert.equal(g.mode,'playing');
@@ -28,11 +23,11 @@ test('new players progress in order and legacy accomplishments are preserved',()
  const p=cleanEpisodes(),arrival={completed:false},old={chapters:{}};assert(!campaignUnlocked(1102,p,arrival,old));arrival.completed=true;assert(campaignUnlocked(1102,p,arrival,old));assert(!campaignUnlocked(1103,p,arrival,old));p.missions[1102].completed=true;assert(campaignUnlocked(1103,p,arrival,old));
  const snapshot=JSON.stringify(legacy);assert(campaignUnlocked(1103,cleanEpisodes(),{completed:false},legacy));assert.equal(JSON.stringify(legacy),snapshot);
 });
-test('1.2 completes fights, precision passage and route through actual attacks',()=>{
- const g=start(1102);assert.equal(g.p.character,'piccolo');fight(g);assert.equal(g.episode.step,1);rocks(g);assert.equal(g.episode.step,2);fight(g);assert.equal(g.episode.step,3);target(g);assert.equal(g.mode,'won');assert.equal(g.events.filter(e=>e.type==='victory').length,1);
+test('mountain segment rescues the boy through actual attacks without rock gates',()=>{
+ const g=start(1102);assert.equal(g.p.character,'piccolo');assert.equal(g.rocks.length,0);fight(g);assert.equal(g.episode.step,1);target(g);assert.equal(g.episode.step,1,'approaching the boy alone does not dismiss the threat');fight(g);assert.equal(g.episode.step,2);fight(g);assert.equal(g.episode.step,3);target(g);assert.equal(g.mode,'won');assert.equal(g.events.filter(e=>e.type==='victory').length,1);
 });
 test('1.3 switches Goku to Piccolo to confined Gohan and back before ending',()=>{
- const g=start(1103);assert.equal(g.p.character,'goku');fight(g);assert.equal(g.p.character,'piccolo');rocks(g);assert.equal(g.p.character,'gohan');
+ const g=start(1103);assert.equal(g.p.character,'goku');fight(g);assert.equal(g.p.character,'piccolo');assert.equal(g.rocks.length,0);target(g);assert.equal(g.p.character,'gohan');
  Object.assign(g.p,{x:2900,y:462});for(let i=0;i<20;i++)g.step(1/60,{right:true,flightMode:true,up:true,attack:true,blast:true,charge:true,special:true,pressed:{attack:true,transform:true,ascend:true}});
  assert(g.p.x<=2920);assert.equal(g.p.y,462);assert.equal(g.p.attack,null);assert.equal(g.shots.length,0);assert.equal(g.p.ki,0);assert(!g.p.form);
  g.p.x=2850;for(let i=0;i<400&&g.p.character==='gohan';i++)g.step(1/60,{guard:true});close(g);
@@ -40,7 +35,7 @@ test('1.3 switches Goku to Piccolo to confined Gohan and back before ending',()=
 });
 test('all checkpoints reconstruct actor, terrain and previous encounters without temporary state',()=>{
  for(const mission of EPISODES)for(let i=0;i<mission.objectives.length;i++){
-  const g=start(mission.id,i);assert.equal(g.p.character,mission.objectives[i].actor);assert.deepEqual([g.p.x,g.p.y],mission.objectives[i].checkpoint);assert.equal(g.rocks.every(r=>r.broken),i>1);
+  const g=start(mission.id,i);assert.equal(g.p.character,mission.objectives[i].actor);assert.deepEqual([g.p.x,g.p.y],mission.objectives[i].checkpoint);assert.equal(g.rocks.length,0);
   assert(!g.p.attack);assert(!g.p.guarding);assert(!g.p.form);assert(!g.shots.length);
   g.pause();const x=g.p.x;g.step(.1,{right:true});assert.equal(g.p.x,x);g.resume();assert.equal(g.mode,'playing');
  }
