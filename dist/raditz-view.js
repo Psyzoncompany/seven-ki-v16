@@ -5,7 +5,7 @@ export function buildRaditzAtlas(image){
  ctx.putImageData(pixels,0,0);const frames=[];
  for(let i=0;i<8;i++){const x0=Math.floor(i%4*c.width/4),x1=Math.floor((i%4+1)*c.width/4),y0=Math.floor(Math.floor(i/4)*c.height/2),y1=Math.floor((Math.floor(i/4)+1)*c.height/2);let l=x1,r=x0,t=y1,b=y0;
   for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++)if(data[(y*c.width+x)*4+3]>80){l=Math.min(l,x);r=Math.max(r,x);t=Math.min(t,y);b=Math.max(b,y);}frames.push({rect:[l,t,Math.max(1,r-l+1),Math.max(1,b-t+1)]});
- }return {image,frames};
+ }return {image:c,frames};
 }
 export function mountRaditzUi(getEngine,clear){
  const panel=document.createElement('section');panel.id='raditz-scene-ui';panel.hidden=true;panel.setAttribute('aria-label','Cena da batalha de Raditz');panel.innerHTML='<div class="scene-tools"><button id="raditz-pause">PAUSAR CENA</button><button id="raditz-skip">PULAR CENA</button></div><div class="scene-caption"><strong id="raditz-speaker"></strong><p id="raditz-line"></p></div>';

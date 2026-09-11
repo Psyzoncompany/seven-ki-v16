@@ -1,6 +1,6 @@
 # Plano de expansão da Saga Saiyajin
 
-Status: execução por partes. Os antigos trechos 1.1, 1.2 e 1.3 foram reunidos na missão única “A chegada de Raditz”, com 12 objetivos e checkpoints entre regiões. Confronto 2.1 com Raditz e demais episódios permanecem planejados. Versus e saves antigos preservados.
+Status: execução por partes. A missão unificada de chegada e a batalha de Raditz estão implementadas. A continuação de 11/09/2026 acrescenta Caminho da Serpente, treinamento de Kaioh e resistência a Nappa até a chegada de Goku. Os registros anteriores abaixo são históricos. Versus e saves antigos preservados.
 
 ### Atualização — missão unificada
 
@@ -16,6 +16,19 @@ Status: execução por partes. Os antigos trechos 1.1, 1.2 e 1.3 foram reunidos 
 - As entregas anteriores descritas abaixo são histórico; esta atualização substitui a separação do Episódio 1 em três fases públicas.
 
 ## 1. Objetivo
+
+### Continuação entregue em 11/09/2026
+
+- Missão 1301: três etapas do Caminho da Serpente, fendas com retorno a marcos locais, encontros com guardiões e Goz/Mez como adaptação jogável. Derrotar o guardião e alcançar a saída são condições distintas.
+- Missão 1401: adaptação de movimento à gravidade, captura de Bubbles, três acertos na janela de Gregory, dano com Kaioken ativo e Genki Dama atingindo o alvo. Os cinco objetivos têm checkpoints e podem ser repetidos. O modificador de deslocamento é exclusivo do planeta; a gravidade física global não é alterada.
+- Missão 1601: duas ondas de Saibamans, confronto com Piccolo, resistência com Kuririn, contra-ataque de Gohan treinado e proteção de Gohan. Nappa não pode ser derrotado antes da hora. Cena de sacrifício e chegada de Goku encerra esta entrega; o duelo Goku/Nappa e Vegeta continuam pendentes.
+- Mapas separados por abas Terra/Outro Mundo, objetivos no HUD, minimapa derivado das posições reais e interface de cenas com pausa e pulo. As cenas finais avançam automaticamente e concedem a mesma conclusão ao pular.
+- Save independente `sevenki-otherworld-invasion-v1`, com checkpoints e registro narrativo gratuito de Kaioken/Genki Dama ao terminar o treinamento. Nenhum ponto ou técnica do save antigo é removido ou cobrado novamente; a árvore antiga permanece independente.
+- Arte própria `otherworld-cast-v29.png`: Kaioh, Bubbles, Gregory, Kuririn, Goz, Mez e Gohan treinado. Cenários construídos em Canvas. As animações combinam poses do atlas com deslocamento; personagens auxiliares ainda têm conjuntos reduzidos de poses.
+- Arquivos: `continuation-data.js`, `continuation-engine.js`, `continuation-view.js`, `continuation.css`, integração em `game.js` e `index.html`. Correção adjacente: o atlas de Raditz agora renderiza o canvas com transparência processada.
+- Validação: testes focados de bloqueios, checkpoints, objetivos, combate com comandos reais, combinação de teclado para Genki Dama, cenas assistidas/puladas e saves. Renders desktop/mobile em `output/continuation`, reproduzíveis por `scripts/check-continuation.mjs`. Conferência da entrada de missão e abas no navegador local. Controle físico não foi testado.
+- Resultado final: 123 testes anteriores aprovados na validação geral; os dez novos testes passaram após corrigir a fenda indevida na arena de Goz/Mez. Conferência mobile em 390 × 844 mostrou as instruções completas acima dos botões e minimapa separado do HUD. Navegador local sem erros capturados.
+- Pendências de escopo: episódios separados de preparação na Terra (5.1–5.3), luta decisiva de Goku com Nappa, Vegeta e conclusão da saga. Não foram liberados como se estivessem prontos.
 
 Transformar a Saga Saiyajin em uma campanha mais longa, com exploração, objetivos variados, personagens jogáveis, minimapa, treinamento e cenas animadas. Manter o combate inspirado em Budokai Tenkaichi 3, adaptado ao jogo 2D, e os efeitos minimalistas já definidos.
 

@@ -2,7 +2,9 @@ import {ARRIVAL,ARRIVAL_ID,readArrival,saveArrival} from './arrival-mission.js';
 import {drawWorldGuidance,worldGuidance} from './world-guidance.js';
 import {renderSagaScene} from './saga-map-view.js';
 import {CampaignEngine} from './episode-engine.js';
-import {RaditzCampaignEngine as JourneyEngine} from './raditz-battle.js';
+import {ContinuationEngine as JourneyEngine} from './continuation-engine.js';
+import {CONTINUATION,readContinuation,continuationUnlocked,saveContinuation} from './continuation-data.js';
+import {buildContinuationAtlas,mountContinuationUi,updateContinuationHud,drawContinuation} from './continuation-view.js';
 import {readRaditz,checkpointRaditz,finishRaditz} from './raditz-data.js';
 import {buildRaditzAtlas,mountRaditzUi,updateRaditzHud,drawRaditzWorld,drawRaditzScene,drawGohanRush} from './raditz-view.js';
 import {JOURNEY,readJourney,saveJourney,finishJourney} from './journey.js';
@@ -40,6 +42,7 @@ import {ParticlePool} from './vfx-pool.js?v=9';
 
 const $=id=>document.getElementById(id);
 mountRaditzUi(()=>engine,()=>clearInput());
+mountContinuationUi(()=>engine,()=>clearInput());
 const stage=$('stage'),canvas=$('game'),ctx=canvas.getContext('2d',{alpha:false});
 let engine=new JourneyEngine();const sound=new GameAudio(),controller=new XboxInput();engine.reset(1101);
 let controllerConnected=false,padMenuDirection='',padMenuNext=0,controllerNotice='';
@@ -52,11 +55,11 @@ let landingPulse=0;
 const duelCamera=new DuelCamera(),heroAnimator=new HeroAnimator();let renderTop=0,renderDelta=1/60;
 let touchLayout;
 let campaign=readProgress(),saga=readSaga(),campaignMode='story',storySaga='saiyan',selectedStage=101,selectedSkill='vigor',skillsWasPlaying=false,lastStoryReward=0,progressSaved=true;
-const storyStages=()=>campaignMode==='legacy'?(storySaga==='freeza'?FREEZA_CHAPTERS:SAIYAN_CHAPTERS):[JOURNEY,CAMPAIGN_STAGES.at(-1)];
+const storyStages=()=>campaignMode==='legacy'?(storySaga==='freeza'?FREEZA_CHAPTERS:SAIYAN_CHAPTERS):[JOURNEY,CAMPAIGN_STAGES.at(-1),...CONTINUATION];
 const mapStages=()=>storyStages();
 const getStage=id=>storyStages().find(s=>s.id===id);
-const unlocked=id=>campaignMode==='legacy'?CHAPTERS.some(c=>c.id===id&&c.available):id===1101||id===1201&&readJourney().completed;
-const recordFor=id=>campaignMode==='legacy'?sagaRecord(saga,id):({... (id===1101?readJourney():readRaditz()),bestCombo:0,orbs:0});
+const unlocked=id=>campaignMode==='legacy'?CHAPTERS.some(c=>c.id===id&&c.available):id===1101||id===1201&&readJourney().completed||continuationUnlocked(id);
+const recordFor=id=>campaignMode==='legacy'?sagaRecord(saga,id):({... (id===1101?readJourney():id===1201?readRaditz():readContinuation().missions[id]),bestCombo:0,orbs:0});
 const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const touch=matchMedia('(pointer: coarse)').matches||('ontouchstart' in window&&navigator.maxTouchPoints>0);
 const enemyRects=[
@@ -80,6 +83,7 @@ async function loadAssets(){
     await Promise.all(['valley','enemies','kai-motion-v2','kai-solar-v2','enemy-defense-v2','forest-v6','saiyans-v6','goku-v8','kaioken-v8','saga-enemies-v8','portraits-v8','namek-map-v13','namek-stage-v13','namek-villains-v13','saiyan-bosses-v21','freeza-v20','combat-world-v21','combo-roster-v22','arrival-coast-v23','arrival-props-v23','coastal-creatures-v23','arrival-rocks-v24','piccolo-v26','gohan-child-v26','village-boy-v27','raditz-finale-v28'].map(name=>new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>{images[name]=img;resolve();};img.onerror=()=>reject(new Error(name));img.src=`/assets/${name}.png`;})));
     atlases.base=buildAtlas(images['kai-motion-v2'],6,5);atlases.solar=buildAtlas(images['kai-solar-v2'],6,5);atlases.defense=buildAtlas(images['enemy-defense-v2'],6,3);atlases.saiyans=buildAtlas(images['saiyans-v6'],6,3);
     atlases.raditzFinale=buildRaditzAtlas(images['raditz-finale-v28']);
+    images.otherworld=await new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=reject;img.src='/assets/otherworld-cast-v29.png';});atlases.otherworld=buildContinuationAtlas(images.otherworld);
     atlases.comboRoster=buildAtlas(images['combo-roster-v22'],6,4);
     for(let row=0;row<4;row++){const height=row===0?105:125,base=atlases.comboRoster.frames[row*6+2].rect[3];for(let i=0;i<6;i++)atlases.comboRoster.frames[row*6+i].scale=height/base;}
     atlases.coastalCreatures=buildAtlas(images['coastal-creatures-v23'],6,2);
@@ -245,6 +249,7 @@ function togglePause(){if(engine.battle?.scene){engine.battle.scenePaused?engine
 function openControls(){if(engine.dialogue||!$('skills-modal').hidden)return;setControlGuide(controllerConnected?'xbox':'keyboard');helpWasPlaying=engine.mode==='playing';if(helpWasPlaying)engine.pause();clearInput();$('controls-modal').hidden=false;}
 function closeControls(){$('controls-modal').hidden=true;if(helpWasPlaying){engine.resume();$('menu').hidden=true;}helpWasPlaying=false;clearInput();}
 function showMenu(mode){
+  if(engine.continuation){$('menu').hidden=false;$('resume').hidden=mode!=='paused';$('victory-map').hidden=mode!=='won';$('menu-skills').hidden=true;$('menu-versus').hidden=true;$('menu-controls').hidden=mode==='won';$('menu-eyebrow').textContent=engine.story.biome;$('menu-title').textContent=mode==='won'?(engine.stageId===1601?'GOKU CHEGOU!':'MISSÃO CONCLUÍDA'):mode==='dead'?'RETOMAR CHECKPOINT':'PAUSADO';$('menu-description').textContent=mode==='won'?(engine.stageId===1601?'Gohan e Kuririn resistiram. Goku assume o confronto; a batalha decisiva continua em uma próxima missão.':'A próxima missão está disponível no mapa.'):'Retome o último objetivo com vida e KI restaurados.';$('restart').textContent=mode==='won'?'JOGAR NOVAMENTE':'RETOMAR CHECKPOINT';$('result-stats').textContent='ETAPA '+(engine.continuation.step+1)+' / '+engine.story.steps.length;return;}
   if(engine.battle){$('menu').hidden=false;$('resume').hidden=mode!=='paused';$('victory-map').hidden=mode!=='won';$('menu-skills').hidden=true;$('menu-versus').hidden=true;$('menu-controls').hidden=mode==='won';$('menu-eyebrow').textContent='ÉPISÓDIO 2 · RADITZ';$('menu-title').textContent=mode==='won'?'O SACRIFÍCIO DE GOKU':mode==='dead'?'TENTE ESTA ETAPA NOVAMENTE':'PAUSADO';$('menu-description').textContent=mode==='won'?'Gohan está salvo. Goku e Raditz morreram. Dois Saiyajins chegarão em um ano. Próximo episódio: o Outro Mundo.':'Retome a luta a partir da última troca de personagem.';$('restart').textContent=mode==='won'?'JOGAR NOVAMENTE':'RETOMAR CHECKPOINT';$('result-stats').textContent=mode==='won'?formatTime(engine.time)+' · Outro Mundo preparado':'ETAPA '+(engine.battle.step+1)+' DE 4';return;}
 
   if(engine.journey){$('menu').hidden=false;$('resume').hidden=mode!=='paused';$('victory-map').hidden=mode!=='won';$('menu-skills').hidden=true;$('menu-versus').hidden=true;$('menu-controls').hidden=mode==='won';$('menu-eyebrow').textContent='EPISÓDIO 1 · A CHEGADA DE RADITZ';$('menu-title').textContent=mode==='won'?'MISSÃO CONCLUÍDA':mode==='dead'?'RETOMAR CHECKPOINT':'PAUSADO';$('menu-description').textContent=mode==='won'?'A jornada até Raditz está concluída. A batalha em equipe será a próxima missão.':'Continue do último checkpoint da jornada.';$('restart').textContent=mode==='won'?'JOGAR NOVAMENTE':'RETOMAR CHECKPOINT';$('result-stats').textContent=mode==='won'?formatTime(engine.time)+' · Costa, montanhas e resgate':'';return;}
@@ -303,6 +308,7 @@ function hudUpdate(){
   if(engine.activeEncounter)$('direction').textContent='LIMPE A ARENA';
   const guidance=worldGuidance(engine);$('direction').textContent=guidance?(guidance.x<p.x?'← ':'→ ')+guidance.label:'';
   updateRaditzHud(engine);
+  updateContinuationHud(engine);
   if(engine.episode){$('special-name').textContent=EPISODE_ACTORS[p.character].technique;$('form-label').textContent='EPISÓDIO 1';if(p.character==='gohan')$('timing-cue').textContent='';}
 }
 
@@ -387,6 +393,8 @@ function processEvents(){
       case 'gohanPulse':ring(e.x,e.y,'#ffca42',40,.6);break;
       case 'arrivalCheckpoint':{if(engine.journey)break;const old=readArrival();progressSaved=saveArrival({...old,checkpoint:e.checkpoint,time:e.time}).saved;if(!progressSaved)engine.arrival.caption='CHECKPOINT NESTA SESSAO';}break;
       case 'raditzCheckpoint':progressSaved=checkpointRaditz(e.checkpoint,e.time).saved;break;
+      case 'continuationCheckpoint':progressSaved=saveContinuation(e.id,e.checkpoint,e.time).saved;break;
+      case 'continuationVictory':progressSaved=saveContinuation(e.id,0,e.time,true).saved;clearInput();showMenu('won');break;
       case 'raditzScene':case 'raditzSceneEnd':clearInput();effects=[];trails=[];duelCamera.reset();syncScreen();break;
       case 'raditzVictory':progressSaved=finishRaditz(e.time).saved;clearInput();showMenu('won');break;
       case 'victory':{if(engine.journey){progressSaved=finishJourney(engine.time).saved;clearInput();showMenu('won');break;}if(engine.episode){progressSaved=completeEpisode(engine.stageId,engine.time).saved;clearInput();showMenu('won');break;}if(engine.arrival){const old=readArrival();progressSaved=saveArrival({...old,completed:true,checkpoint:0,time:0,bestTime:old.bestTime?Math.min(old.bestTime,engine.time):engine.time}).saved;clearInput();showMenu('won');break;}lastStoryReward=engine.story&&!sagaRecord(saga,engine.stageId).completed?4:0;const result=engine.story?finishSaga(saga,engine.stageId,engine.time,engine.maxCombo,engine.collected):recordVictory(campaign,engine.time,engine.maxCombo,engine.stageId);if(engine.story){saga=result.progress;if(engine.stageId===103)storySaga='freeza';}else campaign=result.progress;progressSaved=result.saved;}clearInput();burst(engine.p.x,engine.p.y-60,85,'#ffe4a2',310,-30);setTimeout(()=>showMenu('won'),900);break;
@@ -396,7 +404,7 @@ function processEvents(){
 
 function drawPortrait(){
   if(!loaded)return;const c=$('portrait').getContext('2d');c.imageSmoothingEnabled=false;c.clearRect(0,0,100,100);c.fillStyle='#fff3ca';c.fillRect(0,0,100,100);
-  const atlas=playerAtlas(engine.p.form);const [x,y,w,h]=atlas.frames[0].rect;c.drawImage(atlas.image,x+w*.2,y,w*.6,h*.4,0,0,100,100);
+  const character=engine.p.character,cast=engine.continuation&&['kuririn','gohan'].includes(character);const atlas=cast?atlases.otherworld:engine.continuation&&character==='piccolo'?atlases.piccolo:playerAtlas(engine.p.form);const [x,y,w,h]=atlas.frames[cast?(character==='kuririn'?4:10):0].rect;c.drawImage(atlas.image,x+w*.2,y,w*.6,h*.4,0,0,100,100);
 }
 function buildAtlas(image,cols,rows){
   const c=document.createElement('canvas');c.width=image.width;c.height=image.height;const ac=c.getContext('2d',{willReadFrequently:true});ac.drawImage(image,0,0);const pixels=ac.getImageData(0,0,c.width,c.height),data=pixels.data,frames=[];
@@ -664,6 +672,7 @@ function renderCombatDebug(){
   ctx.restore();
 }
 function render(dt){
+  if(engine.continuation){drawContinuation(ctx,engine,W,H,atlases,reduced);return;}
   renderDelta=dt*(engine.versus?.finish?.scale||1);
   if(engine.battle?.scene){drawRaditzScene(ctx,engine,W,H,atlases,images,reduced);return;}
   const screenW=W,screenH=H,p=engine.p;
@@ -720,7 +729,9 @@ function renderMap(){
   const levels=mapStages(),nodes=$('map-nodes'),legacy=campaignMode==='legacy';$('world-map').classList.add('story-map');$('world-map').classList.remove('freeza-map');$('map-heading').textContent='TERRA · A CHEGADA DE RADITZ';$('map-mode').hidden=true;$('map-saga').hidden=false;$('map-saga').disabled=true;$('map-saga').textContent='FREEZA · EM BREVE';$('map-skills').hidden=true;
   $('world-map').classList.toggle('legacy-map',legacy);$('world-map').classList.toggle('freeza-map',legacy&&storySaga==='freeza');$('map-saga').hidden=!legacy;$('map-saga').disabled=!legacy;if(legacy){$('map-heading').textContent='HISTORIA ANTIGA / '+storySaga.toUpperCase();$('map-saga').textContent=storySaga==='saiyan'?'SAGA FREEZA':'SAGA SAIYAJIN';}
   nodes.replaceChildren();
+  if(!legacy){const realm=getStage(selectedStage)?.realm||'Terra';$('map-heading').textContent=realm.toUpperCase()+' · SAGA SAIYAJIN';const tabs=document.createElement('div');tabs.className='realm-tabs';for(const name of ['Terra','Outro Mundo']){const button=document.createElement('button');button.textContent=name;button.setAttribute('aria-pressed',String(name===realm));button.onclick=()=>{selectedStage=levels.find(l=>(l.realm||'Terra')===name).id;renderMap();};tabs.append(button);}nodes.append(tabs);}
   for(const level of levels){
+    if(!legacy&&(level.realm||'Terra')!==(getStage(selectedStage)?.realm||'Terra'))continue;
     const b=document.createElement('button');b.className='map-node';b.dataset.stage=level.id;
     const art=document.createElement('canvas');art.className='node-art';art.width=200;art.height=150;
     const ac=art.getContext('2d');ac.imageSmoothingEnabled=false;
@@ -737,9 +748,11 @@ function renderMap(){
   $('map-goal').textContent=legacy?'Reuna as 7 esferas e derrote '+level.bossName:level.id===1101?'Ajudar os moradores e preparar o resgate de Gohan':level.id===1102?'Piccolo · abrir a rota até Raditz':level.id===1103?'Goku / Piccolo / Gohan · preparar o resgate':'Goku / Piccolo / Gohan · vença Raditz em equipe';
   $('map-preview').style.backgroundImage=level.id===1101?"url('/assets/arrival-coast-v23.png')":"url('/assets/valley.png')";
   renderSagaScene(document,level,atlases);
+  if(level.continuation){$('map-goal').textContent=level.steps[0].title;$('map-preview').style.backgroundImage=level.realm==='Outro Mundo'?'linear-gradient(160deg,#71649d,#f5d4aa)':'linear-gradient(160deg,#6680a5,#c7a17b)';}
   $('map-play').disabled=!level.available||!ready;$('map-play-label').textContent=!level.available?'EM DESENVOLVIMENTO':!ready?'CONCLUA A MISSÃO ANTERIOR':record.completed?'JOGAR NOVAMENTE':record.checkpoint||record.segment>1101?'RETOMAR CHECKPOINT':'INICIAR MISSÃO '+(level.number||'1');
   $('map-stage-status').textContent=!level.available?'Será implementada na próxima parte do plano.':!ready?'Conclua a missão anterior para continuar.':record.completed?'Missão concluída.'+(record.bestTime?' Melhor tempo: '+formatTime(record.bestTime):''):record.checkpoint||record.segment>1101?level.id===1201?'Etapa '+(record.checkpoint+1)+' de 4 salva.':'Objetivo '+((record.segment-1101)*4+record.checkpoint+1)+' de 12 salvo.':'Pronto para jogar.';
   $('map-orbs').parentElement.hidden=true;$('map-best-combo').parentElement.hidden=true;$('map-completed').textContent=levels.filter(l=>recordFor(l.id).completed).length+' / '+levels.filter(l=>l.available).length;$('map-save-note').textContent=legacy?'Todas as fases antigas desbloqueadas. Progresso preservado.':progressSaved?'Jornada e batalha de Raditz · progresso salvo neste dispositivo.':'Progresso disponível apenas nesta sessão.';
+  if(level.continuation&&ready)$('map-stage-status').textContent=record.completed?'Missão concluída. Pode repetir.':'Etapa '+(record.checkpoint+1)+' de '+level.steps.length+' · '+level.location;
 }
 
 function setControlGuide(mode){
