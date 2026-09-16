@@ -12,11 +12,11 @@
   <link rel="stylesheet" href="/arrival.css?v=23" />
   <link rel="stylesheet" href="/bright-ui.css?v=25" />
   <link rel="stylesheet" href="/dragon-pixel.css?v=26" />
-  <link rel="stylesheet" href="/journey-pixel.css?v=28" />
+  <link rel="stylesheet" href="/journey-pixel.css?v=30" />
   <link rel="stylesheet" href="/raditz.css?v=28" />
   <link rel="stylesheet" href="/continuation.css?v=29" />
   <link rel="preload" href="/assets/fonts/VT323-Regular.ttf" as="font" type="font/ttf" crossorigin />
-  <script type="module" src="/game.js?v=29"></script>
+  <script type="module" src="/game.js?v=30"></script>
 </head>
 <body data-screen="intro">
   <main id="app">
@@ -33,6 +33,18 @@
       <div id="stage" tabindex="0" aria-label="Área do jogo. Use WASD para mover e voar, E para subir, setas para combater e Q para investigar.">
         <canvas id="game" aria-label="Vale dos Ecos, jogo de plataforma e combate"></canvas>
         <div class="vignette" aria-hidden="true"></div>
+        <section id="loading-screen" class="loading-screen" role="status" aria-live="polite" aria-label="Carregando Seven Ki">
+          <div class="loading-sun" aria-hidden="true"></div><div class="loading-cloud cloud-a" aria-hidden="true"></div><div class="loading-cloud cloud-b" aria-hidden="true"></div>
+          <div class="loading-card">
+            <small>DRAGON BALL Z · PIXEL ADVENTURE</small>
+            <h2>SEVEN <span>/ KI</span></h2>
+            <div class="loading-orbs" aria-hidden="true"><i data-star="1"></i><i data-star="2"></i><i data-star="3"></i><i data-star="4"></i><i data-star="5"></i><i data-star="6"></i><i data-star="7"></i></div>
+            <p id="loading-status">REUNINDO AS ESFERAS…</p>
+            <div class="loading-track" aria-hidden="true"><b id="loading-fill"></b></div>
+            <output id="loading-percent">0%</output>
+          </div>
+          <div class="loading-nimbus" aria-hidden="true"><i></i><i></i><i></i></div>
+        </section>
         <div class="hud" id="hud">
           <div class="player-hud">
             <div class="portrait"><canvas id="portrait" width="100" height="100"></canvas><span>01</span></div>

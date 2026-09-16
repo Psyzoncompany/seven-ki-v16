@@ -78,12 +78,15 @@ function resize(){
 new ResizeObserver(resize).observe(stage);resize();
 for(let i=0;i<7;i++){const o=document.createElement('i');$('orb-slots').append(o);}
 
+const loadingStarted=performance.now();
 async function loadAssets(){
   try{
-    await Promise.all(['valley','enemies','kai-motion-v2','kai-solar-v2','enemy-defense-v2','forest-v6','saiyans-v6','goku-v8','goku-fight-v32','kaioken-v8','saga-enemies-v8','portraits-v8','namek-map-v13','namek-stage-v13','namek-villains-v13','saiyan-bosses-v21','freeza-v20','combat-world-v21','combo-roster-v22','arrival-coast-v23','arrival-props-v23','coastal-creatures-v23','arrival-rocks-v24','piccolo-fight-v31','gohan-child-v26','village-boy-v27','raditz-finale-v28'].map(name=>new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>{images[name]=img;resolve();};img.onerror=()=>reject(new Error(name));img.src=`/assets/${name}.png`;})));
+    const assetNames=['valley','enemies','kai-motion-v2','kai-solar-v2','enemy-defense-v2','forest-v6','saiyans-v6','goku-v8','goku-fight-v32','kaioken-v8','saga-enemies-v8','portraits-v8','namek-map-v13','namek-stage-v13','namek-villains-v13','saiyan-bosses-v21','freeza-v20','combat-world-v21','combo-roster-v22','arrival-coast-v23','arrival-props-v23','coastal-creatures-v23','arrival-rocks-v24','piccolo-fight-v31','gohan-child-v26','village-boy-v27','raditz-finale-v28'];
+    let loadedAssets=0;const totalAssets=assetNames.length+2,progress=(label='CARREGANDO GUERREIROS…')=>{const value=Math.round(++loadedAssets/totalAssets*100);$('loading-fill').style.width=value+'%';$('loading-percent').value=value+'%';$('loading-status').textContent=label;};
+    await Promise.all(assetNames.map(name=>new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>{images[name]=img;progress();resolve();};img.onerror=()=>reject(new Error(name));img.src=`/assets/${name}.png`;})));
     atlases.base=buildAtlas(images['kai-motion-v2'],6,5);atlases.solar=buildAtlas(images['kai-solar-v2'],6,5);atlases.defense=buildAtlas(images['enemy-defense-v2'],6,3);atlases.saiyans=buildAtlas(images['saiyans-v6'],6,3);
     atlases.raditzFinale=buildRaditzAtlas(images['raditz-finale-v28']);
-    images.otherworld=await new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=reject;img.src='/assets/otherworld-cast-v29.png';});atlases.otherworld=buildContinuationAtlas(images.otherworld);
+    images.otherworld=await new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>{progress('ABRINDO O OUTRO MUNDO…');resolve(img);};img.onerror=reject;img.src='/assets/otherworld-cast-v29.png';});atlases.otherworld=buildContinuationAtlas(images.otherworld);
     atlases.comboRoster=buildAtlas(images['combo-roster-v22'],6,4);
     for(let row=0;row<4;row++){const height=row===0?105:125,base=atlases.comboRoster.frames[row*6+2].rect[3];for(let i=0;i<6;i++)atlases.comboRoster.frames[row*6+i].scale=height/base;}
     atlases.coastalCreatures=buildAtlas(images['coastal-creatures-v23'],6,2);
@@ -97,11 +100,13 @@ async function loadAssets(){
     atlases.saiyanBosses=buildAtlas(images['saiyan-bosses-v21'],6,3);
     atlases.goku=buildAtlas(images['goku-v8'],6,5);atlases.kaioken=buildAtlas(images['kaioken-v8'],6,5);atlases.sagaEnemies=buildAtlas(images['saga-enemies-v8'],6,5);atlases.namekVillains=buildAtlas(images['namek-villains-v13'],6,6);
     normalizeHeroAtlas(atlases.goku);normalizeHeroAtlas(atlases.kaioken);
-    const comboImage=await new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=reject;img.src='/assets/goku-combos-v16.png';});
+    const comboImage=await new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>{progress('ENERGIA PRONTA!');resolve(img);};img.onerror=reject;img.src='/assets/goku-combos-v16.png';});
     atlases.saiyanCombos=buildAtlas(comboImage,6,4);
     atlases.originalEnemies={image:images.enemies,frames:enemyRects.map(rect=>({rect,anchor:.5}))};
     loaded=true;$('start').disabled=false;$('intro-versus').disabled=false;$('intro-legacy').disabled=false;$('start-text').textContent='MAPA DE FASES';drawPortrait();
+    setTimeout(()=>{$('loading-screen').classList.add('ready');setTimeout(()=>$('loading-screen').hidden=true,520);},Math.max(0,1200-(performance.now()-loadingStarted)));
   }catch{
+    $('loading-screen').hidden=true;
     $('start-text').textContent='TENTAR CARREGAR NOVAMENTE';$('start').disabled=false;
     $('start').onclick=()=>{if(!loaded){$('start').disabled=true;loadAssets();}};
     showToast('Não foi possível carregar as imagens. Toque para tentar novamente.');
