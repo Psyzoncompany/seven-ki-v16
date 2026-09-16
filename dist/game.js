@@ -81,7 +81,7 @@ for(let i=0;i<7;i++){const o=document.createElement('i');$('orb-slots').append(o
 const loadingStarted=performance.now();
 async function loadAssets(){
   try{
-    const assetNames=['valley','enemies','kai-motion-v2','kai-solar-v2','enemy-defense-v2','forest-v6','saiyans-v6','goku-v8','goku-fight-v32','kaioken-v8','saga-enemies-v8','portraits-v8','namek-map-v13','namek-stage-v13','namek-villains-v13','saiyan-bosses-v21','freeza-v20','combat-world-v21','combo-roster-v22','arrival-coast-v23','arrival-props-v23','coastal-creatures-v23','arrival-rocks-v24','piccolo-fight-v31','gohan-child-v26','village-boy-v27','raditz-finale-v28'];
+    const assetNames=['valley','enemies','kai-motion-v2','kai-solar-v2','enemy-defense-v2','forest-v6','saiyans-v6','goku-v8','goku-fight-v32','kaioken-v8','saga-enemies-v8','portraits-v8','namek-map-v13','namek-stage-v13','namek-villains-v13','saiyan-bosses-v21','freeza-v20','combat-world-v21','combo-roster-v22','arrival-coast-v23','arrival-props-v23','coastal-creatures-v23','arrival-rocks-v24','piccolo-fight-v31','gohan-child-v26','village-boy-v27','raditz-finale-v28','loading-snake-way-v31','snake-way-map-v31'];
     let loadedAssets=0;const totalAssets=assetNames.length+2,progress=(label='CARREGANDO GUERREIROS…')=>{const value=Math.round(++loadedAssets/totalAssets*100);$('loading-fill').style.width=value+'%';$('loading-percent').value=value+'%';$('loading-status').textContent=label;};
     await Promise.all(assetNames.map(name=>new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>{images[name]=img;progress();resolve();};img.onerror=()=>reject(new Error(name));img.src=`/assets/${name}.png`;})));
     atlases.base=buildAtlas(images['kai-motion-v2'],6,5);atlases.solar=buildAtlas(images['kai-solar-v2'],6,5);atlases.defense=buildAtlas(images['enemy-defense-v2'],6,3);atlases.saiyans=buildAtlas(images['saiyans-v6'],6,3);
@@ -740,15 +740,15 @@ function closeMap(){$('world-map').hidden=true;$('menu').hidden=true;$('intro').
 function renderMap(){
   const levels=mapStages(),nodes=$('map-nodes'),legacy=campaignMode==='legacy';$('world-map').classList.add('story-map');$('world-map').classList.remove('freeza-map');$('map-heading').textContent='TERRA · A CHEGADA DE RADITZ';$('map-mode').hidden=true;$('map-saga').hidden=false;$('map-saga').disabled=true;$('map-saga').textContent='FREEZA · EM BREVE';$('map-skills').hidden=true;
   $('world-map').classList.toggle('legacy-map',legacy);$('world-map').classList.toggle('freeza-map',legacy&&storySaga==='freeza');$('map-saga').hidden=!legacy;$('map-saga').disabled=!legacy;if(legacy){$('map-heading').textContent='HISTORIA ANTIGA / '+storySaga.toUpperCase();$('map-saga').textContent=storySaga==='saiyan'?'SAGA FREEZA':'SAGA SAIYAJIN';}
-  nodes.replaceChildren();
+  $('world-map').classList.toggle('snake-way-map',!legacy&&selectedStage===1301);nodes.replaceChildren();
   if(!legacy){const realm=getStage(selectedStage)?.realm||'Terra';$('map-heading').textContent=realm.toUpperCase()+' · SAGA SAIYAJIN';const tabs=document.createElement('div');tabs.className='realm-tabs';for(const name of ['Terra','Outro Mundo']){const button=document.createElement('button');button.textContent=name;button.setAttribute('aria-pressed',String(name===realm));button.onclick=()=>{selectedStage=levels.find(l=>(l.realm||'Terra')===name).id;renderMap();};tabs.append(button);}nodes.append(tabs);}
   for(const level of levels){
     if(!legacy&&(level.realm||'Terra')!==(getStage(selectedStage)?.realm||'Terra'))continue;
     const b=document.createElement('button');b.className='map-node';b.dataset.stage=level.id;
     const art=document.createElement('canvas');art.className='node-art';art.width=200;art.height=150;
     const ac=art.getContext('2d');ac.imageSmoothingEnabled=false;
-    const atlas=level.id===1102?atlases.piccolo:level.id===1201?atlases.saiyanBosses:atlases.goku;
-    const [sx,sy,sw,sh]=atlas.frames[0].rect,scale=Math.min(170/sw,140/sh);ac.drawImage(atlas.image,sx,sy,sw,sh,(200-sw*scale)/2,150-sh*scale,sw*scale,sh*scale);
+    if(level.id===1301)ac.drawImage(images['snake-way-map-v31'],0,0,images['snake-way-map-v31'].width,images['snake-way-map-v31'].height,0,0,200,150);
+    else{const atlas=level.id===1102?atlases.piccolo:level.id===1201?atlases.saiyanBosses:atlases.goku;const [sx,sy,sw,sh]=atlas.frames[0].rect,scale=Math.min(170/sw,140/sh);ac.drawImage(atlas.image,sx,sy,sw,sh,(200-sw*scale)/2,150-sh*scale,sw*scale,sh*scale);}
     const number=document.createElement('small');number.textContent='MISSÃO '+(level.number||level.chapter||'1');
     const name=document.createElement('strong');name.textContent=level.name;
     const status=document.createElement('span');status.className='node-status';const record=recordFor(level.id),ready=unlocked(level.id);
@@ -760,7 +760,7 @@ function renderMap(){
   $('map-goal').textContent=legacy?'Reuna as 7 esferas e derrote '+level.bossName:level.id===1101?'Ajudar os moradores e preparar o resgate de Gohan':level.id===1102?'Piccolo · abrir a rota até Raditz':level.id===1103?'Goku / Piccolo / Gohan · preparar o resgate':'Goku / Piccolo / Gohan · vença Raditz em equipe';
   $('map-preview').style.backgroundImage=level.id===1101?"url('/assets/arrival-coast-v23.png')":"url('/assets/valley.png')";
   renderSagaScene(document,level,atlases);
-  if(level.continuation){$('map-goal').textContent=level.steps[0].title;$('map-preview').style.backgroundImage=level.realm==='Outro Mundo'?'linear-gradient(160deg,#71649d,#f5d4aa)':'linear-gradient(160deg,#6680a5,#c7a17b)';}
+  if(level.continuation){$('map-goal').textContent=level.steps[0].title;$('map-preview').style.backgroundImage=level.id===1301?"url('/assets/snake-way-map-v31.png')":level.realm==='Outro Mundo'?'linear-gradient(160deg,#71649d,#f5d4aa)':'linear-gradient(160deg,#6680a5,#c7a17b)';}
   $('map-play').disabled=!level.available||!ready;$('map-play-label').textContent=!level.available?'EM DESENVOLVIMENTO':!ready?'CONCLUA A MISSÃO ANTERIOR':record.completed?'JOGAR NOVAMENTE':record.checkpoint||record.segment>1101?'RETOMAR CHECKPOINT':'INICIAR MISSÃO '+(level.number||'1');
   $('map-stage-status').textContent=!level.available?'Será implementada na próxima parte do plano.':!ready?'Conclua a missão anterior para continuar.':record.completed?'Missão concluída.'+(record.bestTime?' Melhor tempo: '+formatTime(record.bestTime):''):record.checkpoint||record.segment>1101?level.id===1201?'Etapa '+(record.checkpoint+1)+' de 4 salva.':'Objetivo '+((record.segment-1101)*4+record.checkpoint+1)+' de 12 salvo.':'Pronto para jogar.';
   $('map-orbs').parentElement.hidden=true;$('map-best-combo').parentElement.hidden=true;$('map-completed').textContent=levels.filter(l=>recordFor(l.id).completed).length+' / '+levels.filter(l=>l.available).length;$('map-save-note').textContent=legacy?'Todas as fases antigas desbloqueadas. Progresso preservado.':progressSaved?'Jornada e batalha de Raditz · progresso salvo neste dispositivo.':'Progresso disponível apenas nesta sessão.';
