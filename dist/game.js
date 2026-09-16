@@ -80,7 +80,7 @@ for(let i=0;i<7;i++){const o=document.createElement('i');$('orb-slots').append(o
 
 async function loadAssets(){
   try{
-    await Promise.all(['valley','enemies','kai-motion-v2','kai-solar-v2','enemy-defense-v2','forest-v6','saiyans-v6','goku-v8','kaioken-v8','saga-enemies-v8','portraits-v8','namek-map-v13','namek-stage-v13','namek-villains-v13','saiyan-bosses-v21','freeza-v20','combat-world-v21','combo-roster-v22','arrival-coast-v23','arrival-props-v23','coastal-creatures-v23','arrival-rocks-v24','piccolo-v26','gohan-child-v26','village-boy-v27','raditz-finale-v28'].map(name=>new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>{images[name]=img;resolve();};img.onerror=()=>reject(new Error(name));img.src=`/assets/${name}.png`;})));
+    await Promise.all(['valley','enemies','kai-motion-v2','kai-solar-v2','enemy-defense-v2','forest-v6','saiyans-v6','goku-v8','goku-fight-v31','kaioken-v8','saga-enemies-v8','portraits-v8','namek-map-v13','namek-stage-v13','namek-villains-v13','saiyan-bosses-v21','freeza-v20','combat-world-v21','combo-roster-v22','arrival-coast-v23','arrival-props-v23','coastal-creatures-v23','arrival-rocks-v24','piccolo-fight-v31','gohan-child-v26','village-boy-v27','raditz-finale-v28'].map(name=>new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>{images[name]=img;resolve();};img.onerror=()=>reject(new Error(name));img.src=`/assets/${name}.png`;})));
     atlases.base=buildAtlas(images['kai-motion-v2'],6,5);atlases.solar=buildAtlas(images['kai-solar-v2'],6,5);atlases.defense=buildAtlas(images['enemy-defense-v2'],6,3);atlases.saiyans=buildAtlas(images['saiyans-v6'],6,3);
     atlases.raditzFinale=buildRaditzAtlas(images['raditz-finale-v28']);
     images.otherworld=await new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=reject;img.src='/assets/otherworld-cast-v29.png';});atlases.otherworld=buildContinuationAtlas(images.otherworld);
@@ -90,8 +90,8 @@ async function loadAssets(){
     atlases.arrivalProps=buildAtlas(images['arrival-props-v23'],3,2);
     atlases.arrivalRocks=buildAtlas(images['arrival-rocks-v24'],2,2);
     atlases.villageBoy=buildAtlas(images['village-boy-v27'],2,1);
-    atlases.piccolo=buildAtlas(images['piccolo-v26'],4,3);atlases.gohan=buildAtlas(images['gohan-child-v26'],3,2);
-    atlases.piccolo.scale=116/atlases.piccolo.frames[0].rect[3];atlases.gohan.scale=64/atlases.gohan.frames[0].rect[3];
+    atlases.piccolo=buildAtlas(images['piccolo-fight-v31'],5,3);atlases.gokuFight=buildAtlas(images['goku-fight-v31'],5,3);atlases.gohan=buildAtlas(images['gohan-child-v26'],3,2);
+    atlases.piccolo.scale=116/atlases.piccolo.frames[0].rect[3];atlases.gokuFight.scale=105/atlases.gokuFight.frames[0].rect[3];atlases.gohan.scale=64/atlases.gohan.frames[0].rect[3];
     atlases.worldFX=gridAtlas(images['combat-world-v21']);
     atlases.freeza=buildAtlas(images['freeza-v20'],6,4);
     atlases.saiyanBosses=buildAtlas(images['saiyan-bosses-v21'],6,3);
@@ -411,7 +411,7 @@ function buildAtlas(image,cols,rows){
   // Decode the neutral color-key matte at texture-load time. The source atlas stays intact.
   // Component boundaries preserve enclosed stone highlights and small white eye details.
   const sagaAsset=/goku-v8|kaioken-v8|saga-enemies-v8|arrival-props-v23|coastal-creatures-v23|arrival-rocks-v24/.test(image.src||'');
-  const nativeAlpha=/village-boy-v27|piccolo-v26|gohan-child-v26|freeza-v20|saiyan-bosses-v21|saiyans-v6|namek-villains-v13/.test(image.src||'')||sagaAsset;
+  const nativeAlpha=/goku-fight-v31|piccolo-fight-v31|village-boy-v27|piccolo-v26|gohan-child-v26|freeza-v20|saiyan-bosses-v21|saiyans-v6|namek-villains-v13/.test(image.src||'')||sagaAsset;
   if(sagaAsset)for(let i=0;i<data.length;i+=4){if(data[i]>150&&data[i+2]>110&&data[i+1]<110&&data[i]-data[i+1]>65&&data[i+2]-data[i+1]>50)data[i+3]=0;}
   const count=c.width*c.height,mask=new Uint8Array(count),queue=new Int32Array(count);
   for(let i=0;!nativeAlpha&&i<count;i++){const r=data[i*4],g=data[i*4+1],b=data[i*4+2];if(Math.min(r,g,b)>85&&Math.max(r,g,b)-Math.min(r,g,b)<20)mask[i]=1;}
@@ -423,7 +423,7 @@ function buildAtlas(image,cols,rows){
     if(edge||tail>90&&high-low>22)for(let n=0;n<tail;n++)data[queue[n]*4+3]=0;
   }
   ac.putImageData(pixels,0,0);
-  if(/village-boy-v27|piccolo-v26|gohan-child-v26|freeza-v20|saiyan-bosses-v21|combo-roster-v22|coastal-creatures-v23/.test(image.src||'')){
+  if(/goku-fight-v31|piccolo-fight-v31|village-boy-v27|piccolo-v26|gohan-child-v26|freeza-v20|saiyan-bosses-v21|combo-roster-v22|coastal-creatures-v23/.test(image.src||'')){
     // Pack connected sprites individually: adjacent limbs overlap bounding rectangles.
     const parts=findSpriteFrames(data,c.width,c.height,cols,rows,true),packed=document.createElement('canvas');
     const cw=Math.max(...parts.map(f=>f.rect[2]))+8,ch=Math.max(...parts.map(f=>f.rect[3]))+8;
@@ -459,8 +459,15 @@ function buildAtlas(image,cols,rows){
   return {image:c,frames,scale:105/frames[0].rect[3]};
 }
 function playerAtlas(form=false){return (engine.episode||engine.battle)&&engine.p.character!=='goku'?atlases[engine.p.character]:engine.versus?fighterAtlas(engine.versus.player):engine.story?(form?atlases.kaioken:atlases.goku):(form?atlases.solar:atlases.base);}
+function fightFrame(p){
+  if(p.hp<=0)return 14;if(p.stun>0)return 13;if(p.guarding||p.state==='guard')return 8;
+  if(p.attack){const phase=p.attack.t<p.attack.move.active?0:p.attack.t<=p.attack.move.end?1:2;if(p.attack.kind==='launch')return [9,10,12][phase];if(p.attack.kind==='slam')return [12,11,14][phase];return p.attack.step%2?[5,7,8][phase]:[1,3,4][phase];}
+  return 0;
+}
 function playerPose(p){
   if((engine.episode||engine.battle)&&p.character!=='goku')return {atlas:atlases[p.character],frame:episodePose(p),combo:false};
+  const goku=(engine.episode||engine.battle||engine.continuation)?p.character==='goku':engine.versus?engine.versus.player.id==='goku':!!engine.story;
+  if(goku&&!p.form&&atlases.gokuFight&&(p.attack||p.guarding||p.state==='guard'||p.stun>0||p.hp<=0||p.grounded&&Math.abs(p.vx)<25&&p.state==='idle'))return {atlas:atlases.gokuFight,frame:fightFrame(p),combo:false};
   const motion=heroAnimator.sample(p,renderDelta);
   const extra=comboPose(p,engine.versus?engine.versus.player.id:engine.story&&!p.form?'goku':null);
   if(extra!==null)return {atlas:atlases.comboRoster,frame:extra,combo:false,motion};

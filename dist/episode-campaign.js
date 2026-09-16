@@ -40,8 +40,8 @@ export const EPISODE_SCENES={
 };
 export function episodePose(p){
  if(p.character==='gohan')return p.hp<=0?5:p.stun>0?3:p.burstTime>0?4:p.guarding?2:Math.abs(p.vx)>15?1:0;
- if(p.hp<=0)return 11;if(p.stun>0)return 10;if(p.guarding)return 3;
- if(p.state==='special')return p.specialFired?9:8;if(p.charging)return 8;if(p.state==='blast')return 9;
- if(p.attack)return p.attack.kind==='slam'?7:p.attack.kind==='launch'?6:p.attack.step%2?5:4;
- return !p.grounded?2:Math.abs(p.vx)>25?1:0;
+ if(p.hp<=0)return 14;if(p.stun>0)return 13;if(p.guarding)return 8;
+ if(p.state==='special'||p.charging||p.state==='blast')return p.specialFired?3:1;
+ if(p.attack)return p.attack.kind==='slam'?11:p.attack.kind==='launch'?10:p.attack.step%2?7:3;
+ return !p.grounded?12:Math.abs(p.vx)>25?1:0;
 }

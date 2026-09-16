@@ -8,7 +8,7 @@ import {buildContinuationAtlas,drawContinuation} from '../dist/continuation-view
 const source=fs.readFileSync('dist/game.js','utf8');
 const build=vm.runInNewContext(source.slice(source.indexOf('function buildAtlas('),source.indexOf('function playerAtlas('))+';buildAtlas',{document:{createElement:()=>createCanvas(1,1)},findSpriteFrames,clamp:(x,a,b)=>Math.max(a,Math.min(b,x))});
 const a={};
-for(const [id,name,cols,rows] of [['goku','goku-v8',6,5],['kaioken','kaioken-v8',6,5],['piccolo','piccolo-v26',4,3],['gohan','gohan-child-v26',3,2],['saiyanBosses','saiyan-bosses-v21',6,3],['sagaEnemies','saga-enemies-v8',6,5]])a[id]=build(await loadImage('dist/assets/'+name+'.png'),cols,rows);
+for(const [id,name,cols,rows] of [['goku','goku-v8',6,5],['kaioken','kaioken-v8',6,5],['piccolo','piccolo-fight-v31',5,3],['gohan','gohan-child-v26',3,2],['saiyanBosses','saiyan-bosses-v21',6,3],['sagaEnemies','saga-enemies-v8',6,5]])a[id]=build(await loadImage('dist/assets/'+name+'.png'),cols,rows);
 fs.mkdirSync('output/continuation',{recursive:true});
 a.otherworld=buildContinuationAtlas(await loadImage('dist/assets/otherworld-cast-v29.png'),()=>createCanvas(1,1));
 for(const [id,step] of [[1301,0],[1401,1],[1601,3],[1601,5]])for(const [w,h] of [[960,540],[390,600]]){

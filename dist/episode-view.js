@@ -2,7 +2,7 @@ import {EPISODE_ACTORS} from './episode-campaign.js';
 
 export function drawEpisodeWorld(c,g,cam,atlases,sprite){
  const m=g.episode,p=g.p;
- const actor=(id,x,y,frame=0)=>{const a=atlases[id],f=a.frames[frame];sprite(a.image,f.rect,x-cam,y,1,f.scale??EPISODE_ACTORS[id].height/a.frames[0].rect[3],{anchor:f.anchor});};
+ const actor=(id,x,y,frame=0)=>{const a=id==='goku'?atlases.gokuFight:atlases[id],f=a.frames[frame];sprite(a.image,f.rect,x-cam,y,1,f.scale??EPISODE_ACTORS[id].height/a.frames[0].rect[3],{anchor:f.anchor});};
  if(g.stageId===1102){actor('goku',m.step===0?360-Math.min(1,m.sceneTime/3)*50:m.step===3?3130:Math.max(180,p.x-150),462);}
  if(g.stageId===1102&&m.step<=2){
   const a=atlases.villageBoy,f=a.frames[m.step>1?1:0],x=1970-cam;

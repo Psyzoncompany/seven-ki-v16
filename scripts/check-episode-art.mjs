@@ -8,7 +8,7 @@ import {drawEpisodeWorld} from '../dist/episode-view.js';
 const source=fs.readFileSync('dist/game.js','utf8');
 const build=vm.runInNewContext(source.slice(source.indexOf('function buildAtlas('),source.indexOf('function playerAtlas('))+';buildAtlas',{document:{createElement:()=>createCanvas(1,1)},findSpriteFrames,clamp:(x,a,b)=>Math.max(a,Math.min(b,x))});
 const atlases={};
-for(const [id,name,cols,rows,height] of [['piccolo','piccolo-v26',4,3,116],['gohan','gohan-child-v26',3,2,64],['goku','goku-v8',6,5,105],['arrivalProps','arrival-props-v23',3,2,100],['saiyanBosses','saiyan-bosses-v21',6,3,125]]){
+for(const [id,name,cols,rows,height] of [['piccolo','piccolo-fight-v31',5,3,116],['gokuFight','goku-fight-v31',5,3,105],['gohan','gohan-child-v26',3,2,64],['goku','goku-v8',6,5,105],['arrivalProps','arrival-props-v23',3,2,100],['saiyanBosses','saiyan-bosses-v21',6,3,125]]){
  const image=await loadImage('dist/assets/'+name+'.png');
  const a=atlases[id]=build(image,cols,rows);a.scale=height/a.frames[0].rect[3];
  if(a.frames.length!==cols*rows)throw Error('Invalid atlas: '+id);
@@ -23,4 +23,4 @@ const canvas=createCanvas(960,540),c=canvas.getContext('2d');c.fillStyle='#daeff
 const sprite=(image,rect,x,y,dir,scale,opts={})=>{c.save();c.translate(x,y);c.scale(dir*scale,scale);c.drawImage(image,...rect,-rect[2]*(opts.anchor??.5),-rect[3],rect[2],rect[3]);c.restore();};
 drawEpisodeWorld(c,g,2420,atlases,sprite);const a=atlases.gohan,f=a.frames[episodePose(g.p)];sprite(a.image,f.rect,g.p.x-2420,g.p.y,1,a.scale,{anchor:f.anchor});
 fs.writeFileSync('output/episode/captive.png',canvas.toBuffer('image/png'));
-console.log('Runtime atlas loader: 12 Piccolo poses + 6 Gohan poses; captive segment rendered.');
+console.log('Runtime atlas loader: 15 Goku combat poses + 15 Piccolo combat poses + 6 Gohan poses; captive segment rendered.');
